@@ -5,6 +5,7 @@ public class RotaryWingAircraft : ModuleRules {
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		PublicDependencyModuleNames.AddRange(new [] {
+			"AnimGraphRuntime",
 			"Core",
 		});
 
