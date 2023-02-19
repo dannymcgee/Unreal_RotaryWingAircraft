@@ -11,6 +11,7 @@ public class RotaryWingAircraft : ModuleRules {
 		PrivateDependencyModuleNames.AddRange(new [] {
 			"CoreUObject",
 			"Engine",
+			"PhysicsCore",
 		});
 	}
 }
