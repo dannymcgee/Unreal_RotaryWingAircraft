@@ -18,6 +18,11 @@
 			"Name": "RotaryWingAircraft",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "RotaryWingAircraftEditor",
+			"Type": "UncookedOnly",
+			"LoadingPhase": "Default"
 		}
 	]
 }
