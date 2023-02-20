@@ -91,6 +91,9 @@ public:
 	)
 	UCurveFloat* AeroTorqueInfluence;
 
+	UPROPERTY(EditAnywhere, Category="Vehicle")
+	bool DebugPhysics = false;
+
 	
 	// Blueprint Getters --------------------------------------------------------
 	
@@ -219,4 +222,12 @@ private:
 	auto Forward() const -> FVector;
 	auto Right() const -> FVector;
 	auto Up() const -> FVector;
+
+	void DebugPhysicsSimulation(
+		const FVector& centerOfMass,
+		const FVector& linearVelocity,
+		const FVector& thrust,
+		const FVector& drag,
+		double crossSectionalArea
+	) const;
 };

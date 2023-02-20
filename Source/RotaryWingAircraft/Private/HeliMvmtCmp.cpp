@@ -55,7 +55,7 @@ void UHeliMvmtCmp::SubstepTick(float deltaTime, FBodyInstance* body) {
 
 void UHeliMvmtCmp::UpdateEngineState(float deltaTime) {
 	auto& state = _EngineState;
-	
+
 	switch (state.Engine) {
 		case EEngineState::SpoolingUp: {
 			state.SpoolAlpha += (1 / SpoolUpTime) * deltaTime;
@@ -92,7 +92,7 @@ void UHeliMvmtCmp::UpdatePhysicsState(float deltaTime, FBodyInstance* body) {
 		auto lv = body->GetUnrealWorldVelocity_AssumesLocked();
 		auto av = body->GetUnrealWorldAngularVelocityInRadians_AssumesLocked();
 		auto dv = lv - _PhysicsState.LinearVelocity;
-		
+
 		auto gForce = GetOwner()
 			->GetActorTransform()
 			.InverseTransformVector(dv / (k_Gravity * deltaTime));
@@ -108,7 +108,7 @@ void UHeliMvmtCmp::UpdatePhysicsState(float deltaTime, FBodyInstance* body) {
 		_PhysicsState.DeltaVelocity = dv;
 		_PhysicsState.GForce = gForce;
 
-		if (lv.Size() > 100) {
+		if (lv.Size() < 100) {
 			_PhysicsState.CrossSectionalArea = 0;
 			return;
 		}
@@ -126,7 +126,7 @@ void UHeliMvmtCmp::UpdatePhysicsState(float deltaTime, FBodyInstance* body) {
 		auto dpBinorm = FVector {};
 		dpNormal.FindBestAxisVectors(dpTan, dpBinorm);
 
-		auto step = extent / 16;
+		auto step = extent / 16.0;
 		auto hit = FHitResult {};
 		auto hits = 0;
 		auto total = 0;
@@ -134,16 +134,16 @@ void UHeliMvmtCmp::UpdatePhysicsState(float deltaTime, FBodyInstance* body) {
 		for (auto x = -extent; x < extent; x += step) {
 			for (auto y = -extent; y < extent; y += step) {
 				++total;
-				
+
 				auto p1 = dpCenter + (dpTan * x) + (dpBinorm * y);
-				auto p2 = p1 + (dpNormal * extent * 4);
+				auto p2 = p1 + (dpNormal * extent * 4.0);
 
 				if (body->LineTrace(hit, p1, p2, false))
 					++hits;
 			}
 		}
 
-		_PhysicsState.CrossSectionalArea = (hits / total) * extent * 4;
+		_PhysicsState.CrossSectionalArea = ((double) hits / (double) total) * extent * 4.0;
 	});
 }
 
@@ -157,6 +157,9 @@ void UHeliMvmtCmp::UpdateSimulation(float deltaTime, FBodyInstance* body) {
 	auto dv = ComputeThrust(com, mass);
 	auto drag = ComputeDrag(lv, surfArea);
 	auto torque = ComputeTorque(av, mass);
+
+	if (DebugPhysics)
+		DebugPhysicsSimulation(com, lv, dv, drag, surfArea);
 
 	if (AeroTorqueInfluence)
 		ComputeAeroTorque(lv, mass, torque);
@@ -204,7 +207,7 @@ auto UHeliMvmtCmp::ComputeDrag(const FVector& velocity, float area) const -> FVe
 	}
 
 	auto rho = 0.01225; // TODO: Modulate air density by altitude
-	auto v = velocity.Size() / 15;
+	auto v = velocity.Size() / 15.0;
 	auto drag = 0.5 * cd * rho * v * v * area;
 
 	return velocity.GetSafeNormal() * -drag;
@@ -263,7 +266,7 @@ auto UHeliMvmtCmp::GetBodyInstance() const -> FBodyInstance* {
 
 auto UHeliMvmtCmp::Forward() const -> FVector {
 	auto* pawn = GetPawn();
-	if (ensure(pawn))
+	if (ensure(pawn != nullptr))
 		return pawn->GetActorForwardVector();
 
 	return FVector::ForwardVector;
@@ -271,7 +274,7 @@ auto UHeliMvmtCmp::Forward() const -> FVector {
 
 auto UHeliMvmtCmp::Right() const -> FVector {
 	auto* pawn = GetPawn();
-	if (ensure(pawn))
+	if (ensure(pawn != nullptr))
 		return pawn->GetActorRightVector();
 
 	return FVector::RightVector;
@@ -279,10 +282,71 @@ auto UHeliMvmtCmp::Right() const -> FVector {
 
 auto UHeliMvmtCmp::Up() const -> FVector {
 	auto* pawn = GetPawn();
-	if (ensure(pawn))
+	if (ensure(pawn != nullptr))
 		return pawn->GetActorUpVector();
 
 	return FVector::UpVector;
+}
+
+
+// Debug -----------------------------------------------------------------------
+
+void UHeliMvmtCmp::DebugPhysicsSimulation(
+	const FVector& centerOfMass,
+	const FVector& linearVelocity,
+	const FVector& thrust,
+	const FVector& drag,
+	double crossSectionalArea
+) const {
+	// Draw a sphere around the center of mass
+	DrawDebugSphere(GetWorld(), centerOfMass, 35, 8, FColor::White, false, -1, 128, 5);
+
+	// Draw a line indicating linear velocity
+	DrawDebugLine(
+		GetWorld(),
+		centerOfMass,
+		centerOfMass + linearVelocity,
+		FColor::Cyan,
+		false, -1, 0,
+		(linearVelocity.Size() / 200.0));
+
+	// Draw a line for the thrust vector
+	DrawDebugLine(
+		GetWorld(),
+		centerOfMass,
+		centerOfMass + (thrust / 1000.0),
+		FColor::Green,
+		false, -1, 0,
+		(thrust.Size() / 50'000.0)
+	);
+	
+	// Draw a circle to represent the cross-sectional area
+	auto circleY = FVector {};
+	auto circleZ = FVector {};
+	linearVelocity.GetSafeNormal().FindBestAxisVectors(circleY, circleZ);
+	DrawDebugCircle(
+		GetWorld(),
+		centerOfMass,
+		FMath::Sqrt((crossSectionalArea * 100.0) / PI),
+		32,
+		FColor::Magenta,
+		false,
+		-1,
+		255,
+		5,
+		circleY,
+		circleZ
+	);
+
+	// Draw a line for the drag vector
+	DrawDebugLine(
+		GetWorld(),
+		centerOfMass,
+		centerOfMass + (drag / 500.0),
+		FColor::Red,
+		false, -1, 0,
+		(drag.Size() / 50'000.0)
+	);
 }
 
 
@@ -328,7 +392,7 @@ auto UHeliMvmtCmp::GetHeadingDegrees() const -> float {
 		::VectorPlaneProject(Forward(), FVector::UpVector)
 		.GetSafeNormal();
 
-	return FMath::RadiansToDegrees(FMath::Atan2(-direction.Y, -direction.X)) + 180.f;
+	return FMath::RadiansToDegrees(FMath::Atan2(-direction.Y, -direction.X)) + 180.0;
 }
 
 
