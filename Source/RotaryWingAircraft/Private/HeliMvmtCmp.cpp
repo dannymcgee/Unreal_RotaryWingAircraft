@@ -97,10 +97,6 @@ void UHeliMvmtCmp::UpdatePhysicsState(float deltaTime, FBodyInstance* body) {
 			->GetActorTransform()
 			.InverseTransformVector(dv / (k_Gravity * deltaTime));
 
-		if (GetPawn()->IsPlayerControlled()) {
-			HELI_LOG("G-Force: %f", gForce.Size());
-		}
-
 		_PhysicsState.Mass = mass;
 		_PhysicsState.CoM = com;
 		_PhysicsState.LinearVelocity = lv;
@@ -113,37 +109,8 @@ void UHeliMvmtCmp::UpdatePhysicsState(float deltaTime, FBodyInstance* body) {
 			return;
 		}
 
-		auto bb = FPhysicsInterface::GetBounds_AssumesLocked(handle);
-		auto extent = bb.GetExtent().GetAbsMax();
-
-		// dp = direction plane: a plane perpendicular to the direction of travel.
-		// We'll fire a bunnch of line traces from various points on this plane
-		// toward the vehicle, and use the proportion of hits to roughly estimate
-		// the cross-sectional area of the vehicle for drag calculations.
-		auto dpCenter = bb.GetCenter() + lv.GetSafeNormal() * extent;
-		auto dpNormal = lv.GetSafeNormal() * -1;
-		auto dpTan = FVector {};
-		auto dpBinorm = FVector {};
-		dpNormal.FindBestAxisVectors(dpTan, dpBinorm);
-
-		auto step = extent / 16.0;
-		auto hit = FHitResult {};
-		auto hits = 0;
-		auto total = 0;
-
-		for (auto x = -extent; x < extent; x += step) {
-			for (auto y = -extent; y < extent; y += step) {
-				++total;
-
-				auto p1 = dpCenter + (dpTan * x) + (dpBinorm * y);
-				auto p2 = p1 + (dpNormal * extent * 4.0);
-
-				if (body->LineTrace(hit, p1, p2, false))
-					++hits;
-			}
-		}
-
-		_PhysicsState.CrossSectionalArea = ((double) hits / (double) total) * extent * 4.0;
+		_PhysicsState.CrossSectionalArea =
+			ComputeCrossSectionalArea(body, handle, lv.GetSafeNormal());
 	});
 }
 
@@ -156,7 +123,9 @@ void UHeliMvmtCmp::UpdateSimulation(float deltaTime, FBodyInstance* body) {
 
 	auto dv = ComputeThrust(com, mass);
 	auto drag = ComputeDrag(lv, surfArea);
-	auto torque = ComputeTorque(av, mass);
+	auto torque = lv.IsNearlyZero(10.f)
+		? FVector::ZeroVector
+		: ComputeTorque(av, mass);
 
 	if (DebugPhysics)
 		DebugPhysicsSimulation(com, lv, dv, drag, surfArea);
@@ -170,6 +139,45 @@ void UHeliMvmtCmp::UpdateSimulation(float deltaTime, FBodyInstance* body) {
 
 
 // Physics Calculations --------------------------------------------------------
+
+auto UHeliMvmtCmp::ComputeCrossSectionalArea(
+	const FBodyInstance* body,
+	const FPhysicsActorHandle& handle,
+	FVector velocityNormal
+) const -> float {
+	auto bb = FPhysicsInterface::GetBounds_AssumesLocked(handle);
+	auto extent = bb.GetExtent().GetAbsMax();
+
+	// dp = direction plane: a plane perpendicular to the direction of travel.
+	// We'll fire a bunnch of line traces from various points on this plane
+	// toward the vehicle, and use the proportion of hits to roughly estimate
+	// the cross-sectional area of the vehicle for drag calculations.
+	auto dpCenter = bb.GetCenter() + velocityNormal * extent;
+	auto dpNormal = velocityNormal * -1;
+	auto dpTan = FVector {};
+	auto dpBinorm = FVector {};
+	dpNormal.FindBestAxisVectors(dpTan, dpBinorm);
+
+	auto step = extent / 16.0;
+	auto hit = FHitResult {};
+	auto hits = 0;
+	auto total = 0;
+
+	for (auto x = -extent; x < extent; x += step) {
+		for (auto y = -extent; y < extent; y += step) {
+			++total;
+
+			auto p1 = dpCenter + (dpTan * x) + (dpBinorm * y);
+			auto p2 = p1 + (dpNormal * extent * 4.0);
+
+			if (body->LineTrace(hit, p1, p2, false))
+				++hits;
+		}
+	}
+
+	return ((double) hits / (double) total) * extent * 4.0;
+}
+
 
 auto UHeliMvmtCmp::ComputeThrust(const FVector& pos, float mass) const -> FVector {
 	// Scale the collective input by the current engine power

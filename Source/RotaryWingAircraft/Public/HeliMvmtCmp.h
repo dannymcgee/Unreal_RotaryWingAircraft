@@ -214,6 +214,16 @@ private:
 	auto GetPawn() const -> APawn*;
 	auto GetBodyInstance() const -> FBodyInstance*;
 
+	/**
+	 * IMPORTANT: This should only be called from a FPhysicsCommand read/write
+	 * callback with a locked mutex.
+	 */
+	auto ComputeCrossSectionalArea(
+		const FBodyInstance* body,
+		const FPhysicsActorHandle& handle,
+		FVector velocityNormal
+	) const -> float;
+
 	auto ComputeThrust(const FVector& pos, float mass) const -> FVector;
 	auto ComputeDrag(const FVector& velocity, float area) const -> FVector;
 	auto ComputeTorque(const FVector& angularVelocity, float mass) const -> FVector;
