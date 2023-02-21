@@ -1,5 +1,13 @@
 ﻿#include "Heli.h"
+
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
 #include "HeliMvmtCmp.h"
+
+DEFINE_LOG_CATEGORY(LogHeli)
+
+#define HELI_LOG(msg, ...) UE_LOG(LogHeli, Log, TEXT(msg), __VA_ARGS__)
+#define HELI_WARN(msg, ...) UE_LOG(LogHeli, Warning, TEXT(msg), __VA_ARGS__)
 
 
 // Initialization --------------------------------------------------------------
@@ -12,6 +20,12 @@ AHeli::AHeli() : Super() {
 	RootComponent = _Mesh;
 
 	_VehicleMovement = InitVehicleMovement(_Mesh);
+}
+
+void AHeli::BeginPlay() {
+	Super::BeginPlay();
+
+	AddInputMappingContext();
 }
 
 auto AHeli::InitSkelMesh() -> USkeletalMeshComponent* {
@@ -35,35 +49,6 @@ auto AHeli::InitVehicleMovement(USkeletalMeshComponent* mesh) -> UHeliMvmtCmp* {
 	return cmp;
 }
 
-// TODO: Look at Lyra to come up with a better way to setup these inputs
-void AHeli::SetupPlayerInputComponent(UInputComponent* input) {
-	input->BindAction("StartEngine", IE_Pressed, _VehicleMovement, &UHeliMvmtCmp::StartEngine);
-	input->BindAction("StopEngine", IE_Pressed, _VehicleMovement, &UHeliMvmtCmp::StopEngine);
-
-	input->BindAxis("CollectiveUp", this, &AHeli::OnCollectiveUp);
-	input->BindAxis("CollectiveDown", this, &AHeli::OnCollectiveDown);
-
-	input->BindAction("YawRight", IE_Pressed, this, &AHeli::IncYaw);
-	input->BindAction("YawRight", IE_Released, this, &AHeli::DecYaw);
-	input->BindAction("YawLeft", IE_Pressed, this, &AHeli::DecYaw);
-	input->BindAction("YawLeft", IE_Released, this, &AHeli::IncYaw);
-
-	input->BindAxis("Pitch", _VehicleMovement, &UHeliMvmtCmp::SetPitchInput);
-	input->BindAxis("Roll", _VehicleMovement, &UHeliMvmtCmp::SetRollInput);
-}
-
-
-// Update ----------------------------------------------------------------------
-
-void AHeli::Tick(float deltaTime) {
-	Super::Tick(deltaTime);
-
-	_VehicleMovement->SetYawInput(_YawInput);
-	_VehicleMovement->SetCollectiveInput(_CollectiveInput);
-
-	_CollectiveInput = 0;
-}
-
 
 // Getters ---------------------------------------------------------------------
 
@@ -82,18 +67,63 @@ auto AHeli::GetMovementComponent() const -> UPawnMovementComponent* {
 
 // Input handling --------------------------------------------------------------
 
-void AHeli::OnCollectiveUp(float input) {
-	_CollectiveInput = FMath::Clamp(_CollectiveInput + input, -1, 1);
+void AHeli::AddInputMappingContext() const {
+	if (auto* inputSubsys = GetInputSubsystem())
+		inputSubsys->AddMappingContext(DefaultMappingContext, 0);
 }
 
-void AHeli::OnCollectiveDown(float input) {
-	_CollectiveInput = FMath::Clamp(_CollectiveInput - input, -1, 1);
+void AHeli::RemoveInputMappingContext() const {
+	if (auto* inputSubsys = GetInputSubsystem())
+		inputSubsys->RemoveMappingContext(DefaultMappingContext);
 }
 
-void AHeli::IncYaw() {
-	_YawInput += 1;
+auto AHeli::GetInputSubsystem() const -> IEnhancedInputSubsystemInterface* {
+	auto* pc = Cast<APlayerController>(Controller);
+	if (pc == nullptr) return nullptr;
+
+	auto* lp = pc->GetLocalPlayer();
+	if (lp == nullptr) return nullptr;
+
+	return ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(lp);
 }
 
-void AHeli::DecYaw() {
-	_YawInput -= 1;
+void AHeli::SetupPlayerInputComponent(UInputComponent* inputCmp) {
+	if (auto* input = CastChecked<UEnhancedInputComponent>(inputCmp)) {
+		input->BindAction(CyclicAction, ETriggerEvent::Triggered, this, &AHeli::OnCyclic);
+		input->BindAction(CyclicAction, ETriggerEvent::Completed, this, &AHeli::OnCyclic);
+
+		input->BindAction(CollectiveAction, ETriggerEvent::Triggered, this, &AHeli::OnCollective);
+		input->BindAction(CollectiveAction, ETriggerEvent::Completed, this, &AHeli::OnCollective);
+
+		input->BindAction(AntiTorqueAction, ETriggerEvent::Triggered, this, &AHeli::OnAntiTorque);
+		input->BindAction(AntiTorqueAction, ETriggerEvent::Completed, this, &AHeli::OnAntiTorque);
+	}
+	else {
+		HELI_WARN(
+			"Failed to cast InputComponent to EnhancedInputComponent. The Heli "
+			"actor requires an EnhancedInputComponent by default."
+		);
+	}
 }
+
+// ReSharper disable once CppMemberFunctionMayBeConst
+void AHeli::OnCyclic(const FInputActionValue& value) {
+	auto input = value.Get<FVector2D>();
+
+	_VehicleMovement->SetPitchInput(input.Y);
+	_VehicleMovement->SetRollInput(input.X);
+}
+
+// ReSharper disable once CppMemberFunctionMayBeConst
+void AHeli::OnCollective(const FInputActionValue& value) {
+	_VehicleMovement->SetCollectiveInput(value.Get<float>());
+}
+
+// ReSharper disable once CppMemberFunctionMayBeConst
+void AHeli::OnAntiTorque(const FInputActionValue& value) {
+	_VehicleMovement->SetYawInput(value.Get<float>());
+}
+
+
+#undef HELI_LOG
+#undef HELI_WARN

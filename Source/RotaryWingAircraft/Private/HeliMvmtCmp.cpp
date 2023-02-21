@@ -215,7 +215,7 @@ auto UHeliMvmtCmp::ComputeDrag(const FVector& velocity, float area) const -> FVe
 
 auto UHeliMvmtCmp::ComputeTorque(const FVector& angularVelocity, float mass) const -> FVector {
 	auto pitch = Right() * _Input.Pitch * CyclicSensitivity;
-	auto roll = Forward() * _Input.Roll * CyclicSensitivity;
+	auto roll = Forward() * -_Input.Roll * CyclicSensitivity;
 	auto yaw = Up() * _Input.Yaw * AntiTorqueSensitivity;
 
 	auto target = pitch + roll + yaw;

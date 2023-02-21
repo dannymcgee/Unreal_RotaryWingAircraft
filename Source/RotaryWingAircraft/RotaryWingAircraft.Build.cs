@@ -7,6 +7,7 @@ public class RotaryWingAircraft : ModuleRules {
 		PublicDependencyModuleNames.AddRange(new [] {
 			"AnimGraphRuntime",
 			"Core",
+			"EnhancedInput",
 		});
 
 		PrivateDependencyModuleNames.AddRange(new [] {
