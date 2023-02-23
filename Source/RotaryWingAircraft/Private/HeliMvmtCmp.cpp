@@ -92,6 +92,7 @@ void UHeliMvmtCmp::UpdatePhysicsState(float deltaTime, FBodyInstance* body) {
 		auto lv = body->GetUnrealWorldVelocity_AssumesLocked();
 		auto av = body->GetUnrealWorldAngularVelocityInRadians_AssumesLocked();
 		auto dv = lv - _PhysicsState.LinearVelocity;
+		auto aoa = FMath::Asin((Up() | lv) / lv.Size());
 
 		auto gForce = GetOwner()
 			->GetActorTransform()
@@ -103,6 +104,7 @@ void UHeliMvmtCmp::UpdatePhysicsState(float deltaTime, FBodyInstance* body) {
 		_PhysicsState.AngularVelocity = av;
 		_PhysicsState.DeltaVelocity = dv;
 		_PhysicsState.GForce = gForce;
+		_PhysicsState.AngleOfAttack = aoa;
 
 		if (lv.Size() < 100) {
 			_PhysicsState.CrossSectionalArea = 0;
@@ -114,15 +116,16 @@ void UHeliMvmtCmp::UpdatePhysicsState(float deltaTime, FBodyInstance* body) {
 	});
 }
 
-void UHeliMvmtCmp::UpdateSimulation(float deltaTime, FBodyInstance* body) {
+void UHeliMvmtCmp::UpdateSimulation(float deltaTime, FBodyInstance* body) const {
 	auto mass = _PhysicsState.Mass;
 	auto com = _PhysicsState.CoM;
 	auto lv = _PhysicsState.LinearVelocity;
 	auto av = _PhysicsState.AngularVelocity;
 	auto surfArea = _PhysicsState.CrossSectionalArea;
+	auto aoa = _PhysicsState.AngleOfAttack;
 
 	auto dv = ComputeThrust(com, mass);
-	auto drag = ComputeDrag(lv, surfArea);
+	auto drag = ComputeDrag(lv, aoa, surfArea);
 	auto torque = lv.IsNearlyZero(10.f)
 		? FVector::ZeroVector
 		: ComputeTorque(av, mass);
@@ -191,6 +194,7 @@ auto UHeliMvmtCmp::ComputeThrust(const FVector& pos, float mass) const -> FVecto
 		: FMath::Lerp(0.0, k_Gravity + -EnginePower, FMath::Abs(scaledInput));
 
 	// Ground effect - increases rotor efficiency when altitude < 80m
+	// TODO: Use radar altitude, not sea-level altitude
 	// TODO: Make the ground effect altitude curve configurable
 	auto geAlpha = FMath::Clamp(InverseLerp(pos.Z, 80'00, 0), 0, 1);
 	auto groundEffect = FMath::Clamp(geAlpha * EnginePower * scaledInput, 0, EnginePower);
@@ -203,14 +207,13 @@ auto UHeliMvmtCmp::ComputeThrust(const FVector& pos, float mass) const -> FVecto
 	return mass * ((thrust * altPenalty) + groundEffect) * Up();
 }
 
-auto UHeliMvmtCmp::ComputeDrag(const FVector& velocity, float area) const -> FVector {
-	auto aoa = FMath::Acos((Forward() | velocity) / velocity.Size());
-
+auto UHeliMvmtCmp::ComputeDrag(const FVector& velocity, float aoa, float area) const -> FVector {
+	auto aoaAbs = FMath::Abs(aoa);
 	auto cd = 0.0;
 	if (DragCoefficientCurve) {
-		cd = DragCoefficientCurve->GetFloatValue(FMath::RadiansToDegrees(aoa));
+		cd = DragCoefficientCurve->GetFloatValue(FMath::RadiansToDegrees(aoaAbs));
 	} else {
-		auto aoaAlpha = FMath::Clamp(InverseLerp(aoa, 0, PI / 2), 0, 1);
+		auto aoaAlpha = FMath::Clamp(InverseLerp(aoaAbs, 0, PI / 2), 0, 1);
 		cd = FMath::Lerp(0.667, 1.5, aoaAlpha);
 	}
 
@@ -218,7 +221,20 @@ auto UHeliMvmtCmp::ComputeDrag(const FVector& velocity, float area) const -> FVe
 	auto v = velocity.Size() / 15.0;
 	auto drag = 0.5 * cd * rho * v * v * area;
 
-	return velocity.GetSafeNormal() * -drag;
+	// Convert a portion of drag to lift when pitching up (i.e. "cyclic climb")
+	auto stallAngle = FMath::DegreesToRadians(30);
+	auto lift = 0.f;
+	if (aoa < 0 && aoaAbs < stallAngle) {
+		auto ideal = stallAngle * 0.5f;
+		auto factor = 1.f - (FMath::Abs(aoaAbs - ideal) / ideal);
+		lift = factor * drag;
+		drag -= lift;
+	}
+
+	auto dragVector = velocity.GetSafeNormal() * -drag;
+	auto liftVector = Up() * lift;
+
+	return dragVector + liftVector;
 }
 
 auto UHeliMvmtCmp::ComputeTorque(const FVector& angularVelocity, float mass) const -> FVector {
@@ -327,7 +343,7 @@ void UHeliMvmtCmp::DebugPhysicsSimulation(
 		false, -1, 0,
 		(thrust.Size() / 50'000.0)
 	);
-	
+
 	// Draw a circle to represent the cross-sectional area
 	auto circleY = FVector {};
 	auto circleZ = FVector {};

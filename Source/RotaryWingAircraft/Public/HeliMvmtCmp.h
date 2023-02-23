@@ -163,7 +163,7 @@ protected:
 
 	virtual void UpdateEngineState(float deltaTime);
 	virtual void UpdatePhysicsState(float deltaTime, FBodyInstance* body);
-	virtual void UpdateSimulation(float deltaTime, FBodyInstance* body);
+	virtual void UpdateSimulation(float deltaTime, FBodyInstance* body) const;
 	
 
 private:
@@ -193,6 +193,8 @@ private:
 	struct FPhysicsState {
 		float Mass = 0;
 		float CrossSectionalArea = 0;
+		/** In radians */
+		float AngleOfAttack = 0;
 		FVector CoM = FVector::ZeroVector;
 		FVector LinearVelocity = FVector::ZeroVector;
 		FVector AngularVelocity = FVector::ZeroVector;
@@ -225,7 +227,7 @@ private:
 	) const -> float;
 
 	auto ComputeThrust(const FVector& pos, float mass) const -> FVector;
-	auto ComputeDrag(const FVector& velocity, float area) const -> FVector;
+	auto ComputeDrag(const FVector& velocity, float aoa, float area) const -> FVector;
 	auto ComputeTorque(const FVector& angularVelocity, float mass) const -> FVector;
 	void ComputeAeroTorque(const FVector& velocity, float mass, FVector& inout_torque) const;
 
