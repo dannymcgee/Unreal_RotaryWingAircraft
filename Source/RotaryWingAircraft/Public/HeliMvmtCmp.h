@@ -124,6 +124,9 @@ public:
 	UFUNCTION(BlueprintPure, Category="Components|Movement|Heli")
 	float GetHeadingDegrees() const;
 
+	UFUNCTION(BlueprintPure, Category="Components|Movement|Heli")
+	float GetRadarAltitude() const;
+
 	
 	// Blueprint Methods --------------------------------------------------------
 	

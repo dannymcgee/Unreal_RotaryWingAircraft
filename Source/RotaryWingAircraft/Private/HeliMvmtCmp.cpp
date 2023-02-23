@@ -194,9 +194,9 @@ auto UHeliMvmtCmp::ComputeThrust(const FVector& pos, float mass) const -> FVecto
 		: FMath::Lerp(0.0, k_Gravity + -EnginePower, FMath::Abs(scaledInput));
 
 	// Ground effect - increases rotor efficiency when altitude < 80m
-	// TODO: Use radar altitude, not sea-level altitude
 	// TODO: Make the ground effect altitude curve configurable
-	auto geAlpha = FMath::Clamp(InverseLerp(pos.Z, 80'00, 0), 0, 1);
+	auto agl = GetRadarAltitude();
+	auto geAlpha = FMath::Clamp(InverseLerp(agl, 80'00, 0), 0, 1);
 	auto groundEffect = FMath::Clamp(geAlpha * EnginePower * scaledInput, 0, EnginePower);
 
 	// Altitude penalty - decreases rotor efficiency at high altitudes
@@ -417,6 +417,23 @@ auto UHeliMvmtCmp::GetHeadingDegrees() const -> float {
 		.GetSafeNormal();
 
 	return FMath::RadiansToDegrees(FMath::Atan2(-direction.Y, -direction.X)) + 180.0;
+}
+
+auto UHeliMvmtCmp::GetRadarAltitude() const -> float {
+	auto* pawn = GetPawn();
+	if (pawn == nullptr) return INFINITY;
+
+	auto params = FCollisionQueryParams::DefaultQueryParam;
+	params.AddIgnoredActor(pawn);
+
+	auto start = _PhysicsState.CoM;
+	auto end = start + FVector::DownVector * 2000'00.f;
+	auto hit = FHitResult {};
+
+	if (GetWorld()->LineTraceSingleByChannel(hit, start, end, ECC_WorldStatic, params))
+		return FVector::Dist(start, hit.Location);
+
+	return INFINITY;
 }
 
 
