@@ -80,9 +80,6 @@ private:
 	UPROPERTY(EditDefaultsOnly, BlueprintGetter="GetVehicleMovement", Category="Vehicle")
 	UHeliMvmtCmp* _VehicleMovement;
 
-	float _CollectiveInput = 0;
-	float _YawInput = 0;
-
 	auto InitSkelMesh() -> USkeletalMeshComponent*;
 	auto InitVehicleMovement(USkeletalMeshComponent* mesh) -> UHeliMvmtCmp*;
 

@@ -56,13 +56,13 @@ void UHeliMvmtCmp::SubstepTick(float deltaTime, FBodyInstance* body) {
 void UHeliMvmtCmp::UpdateEngineState(float deltaTime) {
 	auto& state = _EngineState;
 
-	switch (state.Engine) {
+	switch (state.Phase) {
 		case EEngineState::SpoolingUp: {
 			state.SpoolAlpha += (1 / SpoolUpTime) * deltaTime;
 
 			if (state.SpoolAlpha >= 1) {
 				state.SpoolAlpha = 1;
-				state.Engine = EEngineState::Running;
+				state.Phase = EEngineState::Running;
 				state.RPM = RPM;
 			} else {
 				state.RPM = FMath::InterpSinInOut(0.f, RPM, state.SpoolAlpha);
@@ -74,7 +74,7 @@ void UHeliMvmtCmp::UpdateEngineState(float deltaTime) {
 
 			if (state.SpoolAlpha <= 0) {
 				state.SpoolAlpha = 0;
-				state.Engine = EEngineState::Off;
+				state.Phase = EEngineState::Off;
 				state.RPM = 0;
 			} else {
 				state.RPM = FMath::InterpSinInOut(0.f, RPM, state.SpoolAlpha);
@@ -202,7 +202,7 @@ auto UHeliMvmtCmp::ComputeThrust(const FVector& pos, float mass) const -> FVecto
 	// Altitude penalty - decreases rotor efficiency at high altitudes
 	auto altPenalty = 1.0;
 	if (AltitudePenaltyCurve)
-		altPenalty = AltitudePenaltyCurve->GetFloatValue(pos.Z / 100);
+		altPenalty = AltitudePenaltyCurve->GetFloatValue(pos.Z / 100.0);
 
 	return mass * ((thrust * altPenalty) + groundEffect) * Up();
 }
@@ -440,17 +440,17 @@ auto UHeliMvmtCmp::GetRadarAltitude() const -> float {
 // Blueprint Methods -----------------------------------------------------------
 
 void UHeliMvmtCmp::StartEngine() {
-	if (_EngineState.Engine != EEngineState::Running)
-		_EngineState.Engine = EEngineState::SpoolingUp;
+	if (_EngineState.Phase != EEngineState::Running)
+		_EngineState.Phase = EEngineState::SpoolingUp;
 }
 
 void UHeliMvmtCmp::StopEngine() {
-	if (_EngineState.Engine != EEngineState::Off)
-		_EngineState.Engine = EEngineState::SpoolingDown;
+	if (_EngineState.Phase != EEngineState::Off)
+		_EngineState.Phase = EEngineState::SpoolingDown;
 }
 
 void UHeliMvmtCmp::SetCollectiveInput(float value) {
-	if (value > 0 && _EngineState.Engine == EEngineState::Off)
+	if (value > 0 && _EngineState.Phase == EEngineState::Off)
 		StartEngine();
 
 	_Input.Collective = value;

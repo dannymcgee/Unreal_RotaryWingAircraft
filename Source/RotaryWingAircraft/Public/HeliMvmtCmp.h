@@ -187,12 +187,14 @@ private:
 		SpoolingDown,
 	};
 
+	// Helper for tracking engine state transitions during the "spooling" phases
 	struct FEngineState {
-		EEngineState Engine = EEngineState::Off;
+		EEngineState Phase = EEngineState::Off;
 		float SpoolAlpha = 0;
 		float RPM = 0;
 	};
 
+	// Container for data read from the physics body
 	struct FPhysicsState {
 		float Mass = 0;
 		float CrossSectionalArea = 0;
@@ -205,7 +207,7 @@ private:
 		FVector GForce = FVector::ZeroVector;
 	};
 
-	// Properties ---------------------------------------------------------------
+	// Details ------------------------------------------------------------------
 
 	FInput _Input;
 	FEngineState _EngineState;
@@ -213,8 +215,6 @@ private:
 
 	static constexpr float k_Gravity = -981;
 	static constexpr float k_CmPerSecToKnots = 0.019438;
-
-	// Methods ------------------------------------------------------------------
 
 	auto GetPawn() const -> APawn*;
 	auto GetBodyInstance() const -> FBodyInstance*;
