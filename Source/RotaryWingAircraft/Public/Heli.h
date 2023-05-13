@@ -40,6 +40,7 @@ public:
 	 * @note This method is safe to call even if the vehicle is not
 	 * player-controlled.
 	 */
+	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void AddInputMappingContext() const;
 
 	/**
@@ -50,6 +51,7 @@ public:
 	 * @note This method is safe to call even if the vehicle is not
 	 * player-controlled.
 	 */
+	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void RemoveInputMappingContext() const;
 
 
