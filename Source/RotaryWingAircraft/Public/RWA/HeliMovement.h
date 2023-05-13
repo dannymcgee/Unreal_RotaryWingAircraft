@@ -6,8 +6,8 @@
 DECLARE_LOG_CATEGORY_EXTERN(LogHeliMvmt, Log, All);
 
 
-USTRUCT()
-struct ROTARYWINGAIRCRAFT_API FRotorSetup {
+USTRUCT(DisplayName="Rotor Setup")
+struct ROTARYWINGAIRCRAFT_API FRWA_RotorSetup {
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, Category="Rotor Setup")
@@ -27,7 +27,7 @@ UCLASS(
 	),
 	meta=(BlueprintSpawnableComponent)
 )
-class ROTARYWINGAIRCRAFT_API UHeliMvmtCmp : public UPawnMovementComponent {
+class ROTARYWINGAIRCRAFT_API URWA_HeliMovementComponent : public UPawnMovementComponent {
 	GENERATED_BODY()
 
 
@@ -35,7 +35,7 @@ public:
 
 	using TickFn = FActorComponentTickFunction;
 
-	UHeliMvmtCmp();
+	URWA_HeliMovementComponent();
 
 
 	// Blueprint Configuration --------------------------------------------------
@@ -61,7 +61,7 @@ public:
 	float Agility = 1;
 
 	UPROPERTY(EditDefaultsOnly, Category="VehicleSetup")
-	TArray<FRotorSetup> Rotors;
+	TArray<FRWA_RotorSetup> Rotors;
 
 	/**
 	 * X-Axis: Altitude (meters)

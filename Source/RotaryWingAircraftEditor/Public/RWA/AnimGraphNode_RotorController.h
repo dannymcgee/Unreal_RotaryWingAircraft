@@ -8,14 +8,14 @@
 
 
 UCLASS(MinimalAPI)
-class UAnimGraphNode_RotorController : public UAnimGraphNode_SkeletalControlBase {
+class UAnimGraphNode_RWA_RotorController : public UAnimGraphNode_SkeletalControlBase {
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, Category="Settings")
-	FAnimNode_RotorController _Node;
+	FAnimNode_RWA_RotorController _Node;
 
 public:
-	UAnimGraphNode_RotorController() : Super() {}
+	UAnimGraphNode_RWA_RotorController() : Super() {}
 
 	virtual auto GetNodeTitle(ENodeTitleType::Type type) const -> FText override;
 	virtual auto GetTooltipText() const -> FText override;

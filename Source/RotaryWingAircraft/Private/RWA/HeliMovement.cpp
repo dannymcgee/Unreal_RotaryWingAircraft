@@ -7,18 +7,20 @@ DEFINE_LOG_CATEGORY(LogHeliMvmt)
 #define HELI_LOG(msg, ...) UE_LOG(LogHeliMvmt, Log, TEXT(msg), __VA_ARGS__)
 #define HELI_WARN(msg, ...) UE_LOG(LogHeliMvmt, Warning, TEXT(msg), __VA_ARGS__)
 
+#define Self URWA_HeliMovementComponent
 
-UHeliMvmtCmp::UHeliMvmtCmp() : Super() {
+
+Self::URWA_HeliMovementComponent() : Super() {
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = true;
 
-	OnCalculateCustomPhysics.BindUObject(this, &UHeliMvmtCmp::SubstepTick);
+	OnCalculateCustomPhysics.BindUObject(this, &Self::SubstepTick);
 }
 
 
 // Lifecycle & Events ----------------------------------------------------------
 
-void UHeliMvmtCmp::TickComponent(float deltaTime, ELevelTick type, TickFn* fn) {
+void Self::TickComponent(float deltaTime, ELevelTick type, TickFn* fn) {
 	Super::TickComponent(deltaTime, type, fn);
 
 	if (auto* body = GetBodyInstance())
@@ -28,7 +30,7 @@ void UHeliMvmtCmp::TickComponent(float deltaTime, ELevelTick type, TickFn* fn) {
 	}
 }
 
-void UHeliMvmtCmp::SetUpdatedComponent(USceneComponent* cmp) {
+void Self::SetUpdatedComponent(USceneComponent* cmp) {
 	Super::SetUpdatedComponent(cmp);
 
 	PawnOwner = cmp ? Cast<APawn>(cmp->GetOwner()) : nullptr;
@@ -40,13 +42,13 @@ void UHeliMvmtCmp::SetUpdatedComponent(USceneComponent* cmp) {
 	}
 }
 
-void UHeliMvmtCmp::SubstepTick(float deltaTime, FBodyInstance* body) {
+void Self::SubstepTick(float deltaTime, FBodyInstance* body) {
 	UpdateEngineState(deltaTime);
 	UpdatePhysicsState(deltaTime, body);
 	UpdateSimulation(deltaTime, body);
 }
 
-void UHeliMvmtCmp::UpdateEngineState(float deltaTime) {
+void Self::UpdateEngineState(float deltaTime) {
 	using namespace RWA;
 
 	auto& state = _EngineState;
@@ -88,7 +90,7 @@ void UHeliMvmtCmp::UpdateEngineState(float deltaTime) {
 	}
 }
 
-void UHeliMvmtCmp::UpdatePhysicsState(float deltaTime, FBodyInstance* body) {
+void Self::UpdatePhysicsState(float deltaTime, FBodyInstance* body) {
 	auto transform = GetOwner()->GetActorTransform();
 
 	FPhysicsCommand::ExecuteRead(body->ActorHandle, [&](const FPhysicsActorHandle& handle) {
@@ -118,7 +120,7 @@ void UHeliMvmtCmp::UpdatePhysicsState(float deltaTime, FBodyInstance* body) {
 	});
 }
 
-void UHeliMvmtCmp::UpdateSimulation(float deltaTime, FBodyInstance* body) const {
+void Self::UpdateSimulation(float deltaTime, FBodyInstance* body) const {
 	auto mass = _PhysicsState.Mass;
 	auto com = _PhysicsState.CoM;
 	auto lv = _PhysicsState.LinearVelocity;
@@ -145,7 +147,7 @@ void UHeliMvmtCmp::UpdateSimulation(float deltaTime, FBodyInstance* body) const 
 
 // Physics Calculations --------------------------------------------------------
 
-auto UHeliMvmtCmp::ComputeCrossSectionalArea(
+auto Self::ComputeCrossSectionalArea(
 	const FBodyInstance* body,
 	const FPhysicsActorHandle& handle,
 	FVector velocityNormal
@@ -184,7 +186,7 @@ auto UHeliMvmtCmp::ComputeCrossSectionalArea(
 }
 
 
-auto UHeliMvmtCmp::ComputeThrust(const FVector& pos, float mass) const -> FVector {
+auto Self::ComputeThrust(const FVector& pos, float mass) const -> FVector {
 	using namespace RWA;
 
 	// Scale the collective input by the current engine power
@@ -208,7 +210,7 @@ auto UHeliMvmtCmp::ComputeThrust(const FVector& pos, float mass) const -> FVecto
 	return mass * ((thrust * altPenalty) + groundEffect) * Up();
 }
 
-auto UHeliMvmtCmp::ComputeDrag(const FVector& velocity, float aoa, float area) const -> FVector {
+auto Self::ComputeDrag(const FVector& velocity, float aoa, float area) const -> FVector {
 	using namespace RWA;
 
 	auto aoaAbs = FMath::Abs(aoa);
@@ -240,7 +242,7 @@ auto UHeliMvmtCmp::ComputeDrag(const FVector& velocity, float aoa, float area) c
 	return dragVector + liftVector;
 }
 
-auto UHeliMvmtCmp::ComputeTorque(const FVector& angularVelocity, float mass) const -> FVector {
+auto Self::ComputeTorque(const FVector& angularVelocity, float mass) const -> FVector {
 	auto pitch = Right() * _Input.Pitch * CyclicSensitivity;
 	auto roll = Forward() * -_Input.Roll * CyclicSensitivity;
 	auto yaw = Up() * _Input.Yaw * AntiTorqueSensitivity;
@@ -251,7 +253,7 @@ auto UHeliMvmtCmp::ComputeTorque(const FVector& angularVelocity, float mass) con
 	return inputTorque * mass * 1'000'00 * Agility;
 }
 
-void UHeliMvmtCmp::ComputeAeroTorque(
+void Self::ComputeAeroTorque(
 	const FVector& velocity,
 	float mass,
 	FVector& inout_torque
@@ -277,12 +279,12 @@ void UHeliMvmtCmp::ComputeAeroTorque(
 
 // Utility ---------------------------------------------------------------------
 
-auto UHeliMvmtCmp::GetPawn() const -> APawn* {
+auto Self::GetPawn() const -> APawn* {
 	if (!UpdatedComponent) return nullptr;
 	return Cast<APawn>(UpdatedComponent->GetOwner());
 }
 
-auto UHeliMvmtCmp::GetBodyInstance() const -> FBodyInstance* {
+auto Self::GetBodyInstance() const -> FBodyInstance* {
 	if (!UpdatedComponent) return nullptr;
 
 	auto* cmp = Cast<USkeletalMeshComponent>(UpdatedComponent);
@@ -291,7 +293,7 @@ auto UHeliMvmtCmp::GetBodyInstance() const -> FBodyInstance* {
 	return cmp->GetBodyInstance();
 }
 
-auto UHeliMvmtCmp::Forward() const -> FVector {
+auto Self::Forward() const -> FVector {
 	auto* pawn = GetPawn();
 	if (ensure(pawn != nullptr))
 		return pawn->GetActorForwardVector();
@@ -299,7 +301,7 @@ auto UHeliMvmtCmp::Forward() const -> FVector {
 	return FVector::ForwardVector;
 }
 
-auto UHeliMvmtCmp::Right() const -> FVector {
+auto Self::Right() const -> FVector {
 	auto* pawn = GetPawn();
 	if (ensure(pawn != nullptr))
 		return pawn->GetActorRightVector();
@@ -307,7 +309,7 @@ auto UHeliMvmtCmp::Right() const -> FVector {
 	return FVector::RightVector;
 }
 
-auto UHeliMvmtCmp::Up() const -> FVector {
+auto Self::Up() const -> FVector {
 	auto* pawn = GetPawn();
 	if (ensure(pawn != nullptr))
 		return pawn->GetActorUpVector();
@@ -318,7 +320,7 @@ auto UHeliMvmtCmp::Up() const -> FVector {
 
 // Debug -----------------------------------------------------------------------
 
-void UHeliMvmtCmp::DebugPhysicsSimulation(
+void Self::DebugPhysicsSimulation(
 	const FVector& centerOfMass,
 	const FVector& linearVelocity,
 	const FVector& thrust,
@@ -379,42 +381,42 @@ void UHeliMvmtCmp::DebugPhysicsSimulation(
 
 // Blueprint Getters -----------------------------------------------------------
 
-auto UHeliMvmtCmp::GetCurrentRPM() const -> float {
+auto Self::GetCurrentRPM() const -> float {
 	return _EngineState.RPM;
 }
 
-auto UHeliMvmtCmp::GetCurrentCollective() const -> float {
+auto Self::GetCurrentCollective() const -> float {
 	return _Input.Collective;
 }
 
-auto UHeliMvmtCmp::GetCurrentCyclic() const -> FVector2D {
+auto Self::GetCurrentCyclic() const -> FVector2D {
 	return { _Input.Roll, _Input.Pitch };
 }
 
-auto UHeliMvmtCmp::GetCurrentTorque() const -> float {
+auto Self::GetCurrentTorque() const -> float {
 	return _Input.Yaw;
 }
 
-auto UHeliMvmtCmp::GetVelocity() const -> FVector {
+auto Self::GetVelocity() const -> FVector {
 	return _PhysicsState.LinearVelocity;
 }
 
-auto UHeliMvmtCmp::GetLateralAirspeed() const -> float {
+auto Self::GetLateralAirspeed() const -> float {
 	auto lv = _PhysicsState.LinearVelocity;
 	auto latVel = FVector { lv.X, lv.Y, 0 };
 
 	return latVel.Size();
 }
 
-auto UHeliMvmtCmp::GetLateralAirspeedKnots() const -> float {
+auto Self::GetLateralAirspeedKnots() const -> float {
 	return GetLateralAirspeed() * k_CmPerSecToKnots;
 }
 
-auto UHeliMvmtCmp::GetVerticalAirspeed() const -> float {
+auto Self::GetVerticalAirspeed() const -> float {
 	return _PhysicsState.LinearVelocity.Z;
 }
 
-auto UHeliMvmtCmp::GetHeadingDegrees() const -> float {
+auto Self::GetHeadingDegrees() const -> float {
 	auto direction = FVector
 		::VectorPlaneProject(Forward(), FVector::UpVector)
 		.GetSafeNormal();
@@ -422,7 +424,7 @@ auto UHeliMvmtCmp::GetHeadingDegrees() const -> float {
 	return FMath::RadiansToDegrees(FMath::Atan2(-direction.Y, -direction.X)) + 180.0;
 }
 
-auto UHeliMvmtCmp::GetRadarAltitude() const -> float {
+auto Self::GetRadarAltitude() const -> float {
 	auto* pawn = GetPawn();
 	if (pawn == nullptr) return INFINITY;
 
@@ -442,35 +444,36 @@ auto UHeliMvmtCmp::GetRadarAltitude() const -> float {
 
 // Blueprint Methods -----------------------------------------------------------
 
-void UHeliMvmtCmp::StartEngine() {
+void Self::StartEngine() {
 	if (_EngineState.Phase != EEngineState::Running)
 		_EngineState.Phase = EEngineState::SpoolingUp;
 }
 
-void UHeliMvmtCmp::StopEngine() {
+void Self::StopEngine() {
 	if (_EngineState.Phase != EEngineState::Off)
 		_EngineState.Phase = EEngineState::SpoolingDown;
 }
 
-void UHeliMvmtCmp::SetCollectiveInput(float value) {
+void Self::SetCollectiveInput(float value) {
 	if (value > 0 && _EngineState.Phase == EEngineState::Off)
 		StartEngine();
 
 	_Input.Collective = value;
 }
 
-void UHeliMvmtCmp::SetPitchInput(float value) {
+void Self::SetPitchInput(float value) {
 	_Input.Pitch = value;
 }
 
-void UHeliMvmtCmp::SetRollInput(float value) {
+void Self::SetRollInput(float value) {
 	_Input.Roll = value;
 }
 
-void UHeliMvmtCmp::SetYawInput(float value) {
+void Self::SetYawInput(float value) {
 	_Input.Yaw = value;
 }
 
 
+#undef Self
 #undef HELI_LOG
 #undef HELI_WARN

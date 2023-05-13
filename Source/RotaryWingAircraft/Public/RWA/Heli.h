@@ -8,19 +8,19 @@ DECLARE_LOG_CATEGORY_EXTERN(LogHeli, Log, All);
 
 struct FInputActionValue;
 class IEnhancedInputSubsystemInterface;
-class UHeliMvmtCmp;
+class URWA_HeliMovementComponent;
 class UInputAction;
 class UInputMappingContext;
 
 
 UCLASS(Blueprintable)
-class ROTARYWINGAIRCRAFT_API AHeli : public APawn {
+class ROTARYWINGAIRCRAFT_API ARWA_Heli : public APawn {
 	GENERATED_BODY()
 
 
 public:
 
-	AHeli();
+	ARWA_Heli();
 
 	virtual void SetupPlayerInputComponent(UInputComponent* inputCmp) override;
 
@@ -28,7 +28,7 @@ public:
 	USkeletalMeshComponent* GetMesh() const;
 
 	UFUNCTION(BlueprintGetter)
-	UHeliMvmtCmp* GetVehicleMovement() const;
+	URWA_HeliMovementComponent* GetVehicleMovement() const;
 
 	virtual auto GetMovementComponent() const -> UPawnMovementComponent* override;
 
@@ -80,10 +80,10 @@ private:
 	USkeletalMeshComponent* _Mesh;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintGetter="GetVehicleMovement", Category="Vehicle")
-	UHeliMvmtCmp* _VehicleMovement;
+	URWA_HeliMovementComponent* _VehicleMovement;
 
 	auto InitSkelMesh() -> USkeletalMeshComponent*;
-	auto InitVehicleMovement(USkeletalMeshComponent* mesh) -> UHeliMvmtCmp*;
+	auto InitVehicleMovement(USkeletalMeshComponent* mesh) -> URWA_HeliMovementComponent*;
 
 	void OnCyclic(const FInputActionValue& value);
 	void OnCollective(const FInputActionValue& value);

@@ -3,10 +3,14 @@
 #include "RWA/Heli.h"
 #include "RWA/HeliMovement.h"
 
+#define AnimData FRWA_RotorAnimData
+#define Proxy FRWA_HeliAnimInstanceProxy
+#define Self URWA_HeliAnimInstance
+
 
 // Animation Data --------------------------------------------------------------
 
-FRotorAnimData::FRotorAnimData(const FRotorSetup& rotor)
+AnimData::FRWA_RotorAnimData(const FRWA_RotorSetup& rotor)
 	: BoneName { rotor.BoneName }
 	, TorqueNormal { rotor.TorqueNormal }
 {}
@@ -14,7 +18,7 @@ FRotorAnimData::FRotorAnimData(const FRotorSetup& rotor)
 
 // Animation instance proxy ----------------------------------------------------
 
-void FHeliAnimInstanceProxy::SetMovementComponent(const UHeliMvmtCmp* mc) {
+void Proxy::SetMovementComponent(const URWA_HeliMovementComponent* mc) {
 	const auto& rotors = mc->Rotors;
 	_RotorInstances.Empty(rotors.Num());
 
@@ -22,10 +26,10 @@ void FHeliAnimInstanceProxy::SetMovementComponent(const UHeliMvmtCmp* mc) {
 		_RotorInstances.Add({ rotor });
 }
 
-void FHeliAnimInstanceProxy::PreUpdate(UAnimInstance* instance, float deltaTime) {
+void Proxy::PreUpdate(UAnimInstance* instance, float deltaTime) {
 	Super::PreUpdate(instance, deltaTime);
 
-	const auto* inst = CastChecked<UHeliAnimInstance>(instance);
+	const auto* inst = CastChecked<URWA_HeliAnimInstance>(instance);
 	if (!inst) return;
 
 	const auto* mc = inst->GetMovementComponent();
@@ -38,34 +42,39 @@ void FHeliAnimInstanceProxy::PreUpdate(UAnimInstance* instance, float deltaTime)
 		rotor.Rotation = FQuat { rotor.TorqueNormal, _RotorAngle }.Rotator();
 }
 
-auto FHeliAnimInstanceProxy::GetAnimData() const -> const TArray<FRotorAnimData>& {
+auto Proxy::GetAnimData() const -> const TArray<FRWA_RotorAnimData>& {
 	return _RotorInstances;
 }
 
 
 // Animation instance ----------------------------------------------------------
 
-void UHeliAnimInstance::SetMovementComponent(const UHeliMvmtCmp* mc) {
+void Self::SetMovementComponent(const URWA_HeliMovementComponent* mc) {
 	_MovementComponent = mc;
 	_Proxy.SetMovementComponent(mc);
 }
 
-auto UHeliAnimInstance::GetMovementComponent() const -> const UHeliMvmtCmp* {
+auto Self::GetMovementComponent() const -> const URWA_HeliMovementComponent* {
 	return _MovementComponent;
 }
 
-auto UHeliAnimInstance::GetVehicle() const -> AHeli* {
-	return Cast<AHeli>(GetOwningActor());
+auto Self::GetVehicle() const -> ARWA_Heli* {
+	return Cast<ARWA_Heli>(GetOwningActor());
 }
 
-void UHeliAnimInstance::NativeInitializeAnimation() {
+void Self::NativeInitializeAnimation() {
 	if (auto* actor = GetOwningActor())
-		if (auto* mc = actor->FindComponentByClass<UHeliMvmtCmp>())
+		if (auto* mc = actor->FindComponentByClass<URWA_HeliMovementComponent>())
 			SetMovementComponent(mc);
 }
 
-auto UHeliAnimInstance::CreateAnimInstanceProxy() -> FAnimInstanceProxy* {
+auto Self::CreateAnimInstanceProxy() -> FAnimInstanceProxy* {
 	return &_Proxy;
 }
 
-void UHeliAnimInstance::DestroyAnimInstanceProxy(FAnimInstanceProxy* proxy) {}
+void Self::DestroyAnimInstanceProxy(FAnimInstanceProxy* proxy) {}
+
+
+#undef Self
+#undef Proxy
+#undef AnimData

@@ -2,7 +2,7 @@
 
 #include "EnhancedPlayerInput.h"
 
-#define Self UInputModifier_Dampen
+#define Self UInputModifier_RWA_Dampen
 
 
 auto Self::ModifyRaw_Implementation(

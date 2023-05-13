@@ -1,7 +1,7 @@
 #include "RWA/AnimNode_RotorController.h"
 #include "RWA/HeliAnimInstance.h"
 
-#define Self FAnimNode_RotorController
+#define Self FAnimNode_RWA_RotorController
 
 
 void Self::GatherDebugData(FNodeDebugData& data) {
@@ -10,7 +10,7 @@ void Self::GatherDebugData(FNodeDebugData& data) {
 }
 
 void Self::Initialize_AnyThread(const FAnimationInitializeContext& ctx) {
-	_Proxy = static_cast<FHeliAnimInstanceProxy*>(ctx.AnimInstanceProxy);
+	_Proxy = static_cast<FRWA_HeliAnimInstanceProxy*>(ctx.AnimInstanceProxy);
 }
 
 void Self::InitializeBoneReferences(const FBoneContainer& requiredBones) {
@@ -19,12 +19,12 @@ void Self::InitializeBoneReferences(const FBoneContainer& requiredBones) {
 	_Rotors.Empty(len);
 
 	for (auto i = 0; i < len; ++i) {
-		auto* rotor = new (_Rotors) FRotorLookupData { i, { data[i].BoneName }};
+		auto* rotor = new (_Rotors) FRWA_RotorLookupData { i, { data[i].BoneName }};
 		rotor->BoneRef.Initialize(requiredBones);
 	}
 
 	// Sort by bone index
-	_Rotors.Sort([](const FRotorLookupData& a, const FRotorLookupData& b) -> bool {
+	_Rotors.Sort([](const FRWA_RotorLookupData& a, const FRWA_RotorLookupData& b) -> bool {
 		return a.BoneRef.BoneIndex < b.BoneRef.BoneIndex;
 	});
 }

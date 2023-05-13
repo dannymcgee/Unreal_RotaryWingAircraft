@@ -9,10 +9,12 @@ DEFINE_LOG_CATEGORY(LogHeli)
 #define HELI_LOG(msg, ...) UE_LOG(LogHeli, Log, TEXT(msg), __VA_ARGS__)
 #define HELI_WARN(msg, ...) UE_LOG(LogHeli, Warning, TEXT(msg), __VA_ARGS__)
 
+#define Self ARWA_Heli
+
 
 // Initialization --------------------------------------------------------------
 
-AHeli::AHeli() : Super() {
+Self::ARWA_Heli() : Super() {
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
 
@@ -22,13 +24,13 @@ AHeli::AHeli() : Super() {
 	_VehicleMovement = InitVehicleMovement(_Mesh);
 }
 
-void AHeli::BeginPlay() {
+void Self::BeginPlay() {
 	Super::BeginPlay();
 
 	AddInputMappingContext();
 }
 
-auto AHeli::InitSkelMesh() -> USkeletalMeshComponent* {
+auto Self::InitSkelMesh() -> USkeletalMeshComponent* {
 	auto* mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("VehicleMesh"));
 	mesh->SetCollisionProfileName(UCollisionProfile::Vehicle_ProfileName);
 	mesh->BodyInstance.bSimulatePhysics = true;
@@ -41,8 +43,8 @@ auto AHeli::InitSkelMesh() -> USkeletalMeshComponent* {
 	return mesh;
 }
 
-auto AHeli::InitVehicleMovement(USkeletalMeshComponent* mesh) -> UHeliMvmtCmp* {
-	auto* cmp = CreateDefaultSubobject<UHeliMvmtCmp>(TEXT("VehicleMovement"));
+auto Self::InitVehicleMovement(USkeletalMeshComponent* mesh) -> URWA_HeliMovementComponent* {
+	auto* cmp = CreateDefaultSubobject<URWA_HeliMovementComponent>(TEXT("VehicleMovement"));
 	cmp->SetIsReplicated(true);
 	cmp->UpdatedComponent = mesh;
 
@@ -52,32 +54,32 @@ auto AHeli::InitVehicleMovement(USkeletalMeshComponent* mesh) -> UHeliMvmtCmp* {
 
 // Getters ---------------------------------------------------------------------
 
-auto AHeli::GetMesh() const -> USkeletalMeshComponent* {
+auto Self::GetMesh() const -> USkeletalMeshComponent* {
 	return _Mesh;
 }
 
-auto AHeli::GetVehicleMovement() const -> UHeliMvmtCmp* {
+auto Self::GetVehicleMovement() const -> URWA_HeliMovementComponent* {
 	return _VehicleMovement;
 }
 
-auto AHeli::GetMovementComponent() const -> UPawnMovementComponent* {
+auto Self::GetMovementComponent() const -> UPawnMovementComponent* {
 	return _VehicleMovement;
 }
 
 
 // Input handling --------------------------------------------------------------
 
-void AHeli::AddInputMappingContext() const {
+void Self::AddInputMappingContext() const {
 	if (auto* inputSubsys = GetInputSubsystem())
 		inputSubsys->AddMappingContext(DefaultMappingContext, 0);
 }
 
-void AHeli::RemoveInputMappingContext() const {
+void Self::RemoveInputMappingContext() const {
 	if (auto* inputSubsys = GetInputSubsystem())
 		inputSubsys->RemoveMappingContext(DefaultMappingContext);
 }
 
-auto AHeli::GetInputSubsystem() const -> IEnhancedInputSubsystemInterface* {
+auto Self::GetInputSubsystem() const -> IEnhancedInputSubsystemInterface* {
 	auto* pc = Cast<APlayerController>(Controller);
 	if (pc == nullptr) return nullptr;
 
@@ -87,16 +89,16 @@ auto AHeli::GetInputSubsystem() const -> IEnhancedInputSubsystemInterface* {
 	return ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(lp);
 }
 
-void AHeli::SetupPlayerInputComponent(UInputComponent* inputCmp) {
+void Self::SetupPlayerInputComponent(UInputComponent* inputCmp) {
 	if (auto* input = CastChecked<UEnhancedInputComponent>(inputCmp)) {
-		input->BindAction(CyclicAction, ETriggerEvent::Triggered, this, &AHeli::OnCyclic);
-		input->BindAction(CyclicAction, ETriggerEvent::Completed, this, &AHeli::OnCyclic);
+		input->BindAction(CyclicAction, ETriggerEvent::Triggered, this, &Self::OnCyclic);
+		input->BindAction(CyclicAction, ETriggerEvent::Completed, this, &Self::OnCyclic);
 
-		input->BindAction(CollectiveAction, ETriggerEvent::Triggered, this, &AHeli::OnCollective);
-		input->BindAction(CollectiveAction, ETriggerEvent::Completed, this, &AHeli::OnCollective);
+		input->BindAction(CollectiveAction, ETriggerEvent::Triggered, this, &Self::OnCollective);
+		input->BindAction(CollectiveAction, ETriggerEvent::Completed, this, &Self::OnCollective);
 
-		input->BindAction(AntiTorqueAction, ETriggerEvent::Triggered, this, &AHeli::OnAntiTorque);
-		input->BindAction(AntiTorqueAction, ETriggerEvent::Completed, this, &AHeli::OnAntiTorque);
+		input->BindAction(AntiTorqueAction, ETriggerEvent::Triggered, this, &Self::OnAntiTorque);
+		input->BindAction(AntiTorqueAction, ETriggerEvent::Completed, this, &Self::OnAntiTorque);
 	}
 	else {
 		HELI_WARN(
@@ -107,7 +109,7 @@ void AHeli::SetupPlayerInputComponent(UInputComponent* inputCmp) {
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
-void AHeli::OnCyclic(const FInputActionValue& value) {
+void Self::OnCyclic(const FInputActionValue& value) {
 	auto input = value.Get<FVector2D>();
 
 	_VehicleMovement->SetPitchInput(input.Y);
@@ -115,15 +117,16 @@ void AHeli::OnCyclic(const FInputActionValue& value) {
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
-void AHeli::OnCollective(const FInputActionValue& value) {
+void Self::OnCollective(const FInputActionValue& value) {
 	_VehicleMovement->SetCollectiveInput(value.Get<float>());
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
-void AHeli::OnAntiTorque(const FInputActionValue& value) {
+void Self::OnAntiTorque(const FInputActionValue& value) {
 	_VehicleMovement->SetYawInput(value.Get<float>());
 }
 
 
+#undef Self
 #undef HELI_LOG
 #undef HELI_WARN

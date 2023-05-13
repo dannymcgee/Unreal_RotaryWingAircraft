@@ -4,15 +4,15 @@
 #include "BoneControllers/AnimNode_SkeletalControlBase.h"
 #include "AnimNode_RotorController.generated.h"
 
-struct FHeliAnimInstanceProxy;
+struct FRWA_HeliAnimInstanceProxy;
 
 
-struct FRotorLookupData {
+struct FRWA_RotorLookupData {
 	int32 Index;
 	FBoneReference BoneRef;
 
-	FRotorLookupData() = default;
-	FRotorLookupData(int32 idx, FBoneReference boneRef)
+	FRWA_RotorLookupData() = default;
+	FRWA_RotorLookupData(int32 idx, FBoneReference boneRef)
 		: Index { idx }
 		, BoneRef { boneRef }
 	{}
@@ -20,11 +20,11 @@ struct FRotorLookupData {
 
 
 USTRUCT()
-struct ROTARYWINGAIRCRAFT_API FAnimNode_RotorController : public FAnimNode_SkeletalControlBase {
+struct ROTARYWINGAIRCRAFT_API FAnimNode_RWA_RotorController : public FAnimNode_SkeletalControlBase {
 	GENERATED_BODY()
 
 public:
-	FAnimNode_RotorController() = default;
+	FAnimNode_RWA_RotorController() = default;
 
 	virtual void GatherDebugData(FNodeDebugData& data) override;
 	virtual void Initialize_AnyThread(const FAnimationInitializeContext& ctx) override;
@@ -40,8 +40,8 @@ public:
 	) override;
 
 private:
-	const FHeliAnimInstanceProxy* _Proxy = nullptr;
-	TArray<FRotorLookupData> _Rotors = {};
+	const FRWA_HeliAnimInstanceProxy* _Proxy = nullptr;
+	TArray<FRWA_RotorLookupData> _Rotors = {};
 
 	virtual void InitializeBoneReferences(const FBoneContainer& requiredBones) override;
 };

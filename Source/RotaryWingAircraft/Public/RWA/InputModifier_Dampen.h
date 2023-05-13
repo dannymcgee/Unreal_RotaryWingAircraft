@@ -6,7 +6,7 @@
 
 
 UCLASS(NotBlueprintable, MinimalAPI, meta=(DisplayName="Dampen"))
-class UInputModifier_Dampen : public UInputModifier {
+class UInputModifier_RWA_Dampen : public UInputModifier {
 	GENERATED_BODY()
 
 public:
