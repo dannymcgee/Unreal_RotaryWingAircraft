@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "AnimGraphNode_SkeletalControlBase.h"
-#include "AnimNode_RotorController.h"
+#include "RWA/AnimNode_RotorController.h"
 
 #include "AnimGraphNode_RotorController.generated.h"
 

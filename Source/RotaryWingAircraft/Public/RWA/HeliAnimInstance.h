@@ -34,7 +34,7 @@ public:
 private:
 	inline static constexpr
 	float k_RpmToRadsPerSec = 0.10472;
-	
+
 	TArray<FRotorAnimData> _RotorInstances = {};
 	float _RotorSpeed = 0;
 	float _RotorAngle = 0;

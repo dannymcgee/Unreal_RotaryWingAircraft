@@ -1,6 +1,7 @@
-#include "HeliAnimInstance.h"
-#include "Heli.h"
-#include "HeliMvmtCmp.h"
+#include "RWA/HeliAnimInstance.h"
+
+#include "RWA/Heli.h"
+#include "RWA/HeliMovement.h"
 
 
 // Animation Data --------------------------------------------------------------

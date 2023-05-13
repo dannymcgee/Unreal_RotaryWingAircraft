@@ -1,8 +1,8 @@
-﻿#include "Heli.h"
+﻿#include "RWA/Heli.h"
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "HeliMvmtCmp.h"
+#include "RWA/HeliMovement.h"
 
 DEFINE_LOG_CATEGORY(LogHeli)
 

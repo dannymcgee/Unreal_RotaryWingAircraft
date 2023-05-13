@@ -1,5 +1,5 @@
-#include "AnimNode_RotorController.h"
-#include "HeliAnimInstance.h"
+#include "RWA/AnimNode_RotorController.h"
+#include "RWA/HeliAnimInstance.h"
 
 #define Self FAnimNode_RotorController
 

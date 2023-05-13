@@ -1,6 +1,6 @@
-﻿#include "HeliMvmtCmp.h"
+﻿#include "RWA/HeliMovement.h"
 
-#include "RWA_Util.h"
+#include "RWA/Util.h"
 
 DEFINE_LOG_CATEGORY(LogHeliMvmt)
 
@@ -48,7 +48,7 @@ void UHeliMvmtCmp::SubstepTick(float deltaTime, FBodyInstance* body) {
 
 void UHeliMvmtCmp::UpdateEngineState(float deltaTime) {
 	using namespace RWA;
-	
+
 	auto& state = _EngineState;
 
 	switch (state.Phase) {
@@ -186,7 +186,7 @@ auto UHeliMvmtCmp::ComputeCrossSectionalArea(
 
 auto UHeliMvmtCmp::ComputeThrust(const FVector& pos, float mass) const -> FVector {
 	using namespace RWA;
-	
+
 	// Scale the collective input by the current engine power
 	auto scaledInput = _Input.Collective * _EngineState.PowerAlpha;
 
@@ -210,7 +210,7 @@ auto UHeliMvmtCmp::ComputeThrust(const FVector& pos, float mass) const -> FVecto
 
 auto UHeliMvmtCmp::ComputeDrag(const FVector& velocity, float aoa, float area) const -> FVector {
 	using namespace RWA;
-	
+
 	auto aoaAbs = FMath::Abs(aoa);
 	auto cd = 0.0;
 	if (DragCoefficientCurve) {

@@ -1,6 +1,6 @@
-#include "AnimGraphNode_RotorController.h"
+#include "RWA/AnimGraphNode_RotorController.h"
 
-#include "HeliAnimInstance.h"
+#include "RWA/HeliAnimInstance.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Kismet2/CompilerResultsLog.h"
 

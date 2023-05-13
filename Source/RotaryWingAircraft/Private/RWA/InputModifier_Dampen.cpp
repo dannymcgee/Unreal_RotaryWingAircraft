@@ -1,4 +1,4 @@
-﻿#include "InputModifier_Dampen.h"
+﻿#include "RWA/InputModifier_Dampen.h"
 
 #include "EnhancedPlayerInput.h"
 
@@ -39,7 +39,7 @@ auto Self::ModifyRaw_Implementation(
 auto Self::ModifyRaw(float value, float deltaTime) const -> FInputActionValue {
 	if (FMath::IsNearlyZero(value))
 		return { 0.f };
-	
+
 	auto prev = _LastValue.Get<float>();
 	auto result = FMath::FInterpTo(prev, value, deltaTime, LerpSpeed);
 	return { result };
@@ -48,7 +48,7 @@ auto Self::ModifyRaw(float value, float deltaTime) const -> FInputActionValue {
 auto Self::ModifyRaw(FVector2D value, float deltaTime) const -> FInputActionValue {
 	if (value.IsNearlyZero())
 		return { value };
-	
+
 	auto prev = _LastValue.Get<FVector2D>();
 	auto result = FMath::Vector2DInterpTo(prev, value, deltaTime, LerpSpeed);
 	return { result };
@@ -57,7 +57,7 @@ auto Self::ModifyRaw(FVector2D value, float deltaTime) const -> FInputActionValu
 auto Self::ModifyRaw(FVector value, float deltaTime) const -> FInputActionValue {
 	if (value.IsNearlyZero())
 		return { value };
-	
+
 	auto prev = _LastValue.Get<FVector>();
 	auto result = FMath::VInterpTo(prev, value, deltaTime, LerpSpeed);
 	return { result };

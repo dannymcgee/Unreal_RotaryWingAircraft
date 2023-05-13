@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "GameFramework/PawnMovementComponent.h"
-#include "HeliMvmtCmp.generated.h"
+#include "HeliMovement.generated.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogHeliMvmt, Log, All);
 
@@ -32,12 +32,12 @@ class ROTARYWINGAIRCRAFT_API UHeliMvmtCmp : public UPawnMovementComponent {
 
 
 public:
-	
+
 	using TickFn = FActorComponentTickFunction;
-	
+
 	UHeliMvmtCmp();
 
-	
+
 	// Blueprint Configuration --------------------------------------------------
 
 public:
@@ -94,9 +94,9 @@ public:
 	UPROPERTY(EditAnywhere, Category="Vehicle")
 	bool DebugPhysics = false;
 
-	
+
 	// Blueprint Getters --------------------------------------------------------
-	
+
 	UFUNCTION(BlueprintPure, Category="Components|Movement|Heli")
 	float GetCurrentRPM() const;
 
@@ -127,9 +127,9 @@ public:
 	UFUNCTION(BlueprintPure, Category="Components|Movement|Heli")
 	float GetRadarAltitude() const;
 
-	
+
 	// Blueprint Methods --------------------------------------------------------
-	
+
 	UFUNCTION(BlueprintCallable, Category="Components|Movement|Heli")
 	void StartEngine();
 
@@ -154,20 +154,20 @@ public:
 public:
 
 	virtual void TickComponent(float deltaTime, ELevelTick type, TickFn* fn) override;
-	
+
 
 protected:
 
 	FCalculateCustomPhysics OnCalculateCustomPhysics;
-	
+
 	virtual void SetUpdatedComponent(USceneComponent* cmp) override;
-	
+
 	void SubstepTick(float deltaTime, FBodyInstance* body);
 
 	virtual void UpdateEngineState(float deltaTime);
 	virtual void UpdatePhysicsState(float deltaTime, FBodyInstance* body);
 	virtual void UpdateSimulation(float deltaTime, FBodyInstance* body) const;
-	
+
 
 private:
 
