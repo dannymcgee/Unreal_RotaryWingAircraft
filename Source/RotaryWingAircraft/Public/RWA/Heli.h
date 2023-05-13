@@ -22,7 +22,7 @@ public:
 
 	ARWA_Heli();
 
-	virtual void SetupPlayerInputComponent(UInputComponent* inputCmp) override;
+	void SetupPlayerInputComponent(UInputComponent* inputCmp) override;
 
 	UFUNCTION(BlueprintGetter)
 	USkeletalMeshComponent* GetMesh() const;
@@ -30,7 +30,7 @@ public:
 	UFUNCTION(BlueprintGetter)
 	URWA_HeliMovementComponent* GetVehicleMovement() const;
 
-	virtual auto GetMovementComponent() const -> UPawnMovementComponent* override;
+	auto GetMovementComponent() const -> UPawnMovementComponent* override;
 
 	/**
 	 * Adds the vehicle's input mapping context to the current player. If the
@@ -69,23 +69,23 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input", DisplayName="Anti-Torque Action")
 	UInputAction* AntiTorqueAction;
 
-	virtual void BeginPlay() override;
+	void BeginPlay() override;
 
 	virtual auto GetInputSubsystem() const -> IEnhancedInputSubsystemInterface*;
 
 
 private:
 
-	UPROPERTY(EditDefaultsOnly, BlueprintGetter="GetMesh", Category="Vehicle")
-	USkeletalMeshComponent* _Mesh;
+	UPROPERTY(EditDefaultsOnly, BlueprintGetter="GetMesh", Category="Vehicle", DisplayName="Mesh")
+	USkeletalMeshComponent* m_Mesh;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintGetter="GetVehicleMovement", Category="Vehicle")
-	URWA_HeliMovementComponent* _VehicleMovement;
+	UPROPERTY(EditDefaultsOnly, BlueprintGetter="GetVehicleMovement", Category="Vehicle", DisplayName="Vehicle Movement")
+	URWA_HeliMovementComponent* m_VehicleMovement;
 
 	auto InitSkelMesh() -> USkeletalMeshComponent*;
 	auto InitVehicleMovement(USkeletalMeshComponent* mesh) -> URWA_HeliMovementComponent*;
 
-	void OnCyclic(const FInputActionValue& value);
-	void OnCollective(const FInputActionValue& value);
-	void OnAntiTorque(const FInputActionValue& value);
+	void OnCyclic(FInputActionValue const& value);
+	void OnCollective(FInputActionValue const& value);
+	void OnAntiTorque(FInputActionValue const& value);
 };

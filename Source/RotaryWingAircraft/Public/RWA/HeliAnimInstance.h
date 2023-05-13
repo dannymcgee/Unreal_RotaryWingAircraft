@@ -15,7 +15,7 @@ struct FRWA_RotorAnimData {
 	FVector TorqueNormal = FVector::UpVector;
 
 	FRWA_RotorAnimData() = default;
-	FRWA_RotorAnimData(const FRWA_RotorSetup& rotor);
+	FRWA_RotorAnimData(FRWA_RotorSetup const& rotor);
 };
 
 
@@ -27,9 +27,9 @@ struct ROTARYWINGAIRCRAFT_API FRWA_HeliAnimInstanceProxy : public FAnimInstanceP
 	FRWA_HeliAnimInstanceProxy(UAnimInstance* inst) : Super(inst) {}
 
 public:
-	void SetMovementComponent(const URWA_HeliMovementComponent* mc);
-	virtual void PreUpdate(UAnimInstance* instance, float deltaTime) override;
-	auto GetAnimData() const -> const TArray<FRWA_RotorAnimData>&;
+	void SetMovementComponent(URWA_HeliMovementComponent const* mc);
+	void PreUpdate(UAnimInstance* instance, float deltaTime) override;
+	auto GetAnimData() const -> TArray<FRWA_RotorAnimData> const&;
 
 private:
 	inline static constexpr
@@ -47,19 +47,19 @@ class ROTARYWINGAIRCRAFT_API URWA_HeliAnimInstance : public UAnimInstance {
 
 public:
 	URWA_HeliAnimInstance() : Super() {}
-	void SetMovementComponent(const URWA_HeliMovementComponent* mc);
-	auto GetMovementComponent() const -> const URWA_HeliMovementComponent*;
+	void SetMovementComponent(URWA_HeliMovementComponent const* mc);
+	auto GetMovementComponent() const -> URWA_HeliMovementComponent const*;
 
 private:
-	FRWA_HeliAnimInstanceProxy _Proxy = {};
+	FRWA_HeliAnimInstanceProxy m_Proxy = {};
 
-	UPROPERTY(Transient)
-	const URWA_HeliMovementComponent* _MovementComponent;
+	UPROPERTY(Transient, DisplayName="Movement Component")
+	URWA_HeliMovementComponent const* m_MovementComponent;
 
 	UFUNCTION(BlueprintPure, Category="Animation")
 	ARWA_Heli* GetVehicle() const;
 
-	virtual void NativeInitializeAnimation() override;
-	virtual auto CreateAnimInstanceProxy() -> FAnimInstanceProxy* override;
-	virtual void DestroyAnimInstanceProxy(FAnimInstanceProxy* proxy) override;
+	void NativeInitializeAnimation() override;
+	auto CreateAnimInstanceProxy() -> FAnimInstanceProxy* override;
+	void DestroyAnimInstanceProxy(FAnimInstanceProxy* proxy) override;
 };

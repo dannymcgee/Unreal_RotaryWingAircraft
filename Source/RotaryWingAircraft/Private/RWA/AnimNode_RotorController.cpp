@@ -4,36 +4,40 @@
 #define Self FAnimNode_RWA_RotorController
 
 
-void Self::GatherDebugData(FNodeDebugData& data) {
+void Self::GatherDebugData(FNodeDebugData& data)
+{
 	Super::GatherDebugData(data);
 	// TODO
 }
 
-void Self::Initialize_AnyThread(const FAnimationInitializeContext& ctx) {
-	_Proxy = static_cast<FRWA_HeliAnimInstanceProxy*>(ctx.AnimInstanceProxy);
+void Self::Initialize_AnyThread(FAnimationInitializeContext const& ctx)
+{
+	m_Proxy = static_cast<FRWA_HeliAnimInstanceProxy*>(ctx.AnimInstanceProxy);
 }
 
-void Self::InitializeBoneReferences(const FBoneContainer& requiredBones) {
-	const auto& data = _Proxy->GetAnimData();
+void Self::InitializeBoneReferences(FBoneContainer const& requiredBones)
+{
+	auto const& data = m_Proxy->GetAnimData();
 	auto len = data.Num();
-	_Rotors.Empty(len);
+	m_Rotors.Empty(len);
 
 	for (auto i = 0; i < len; ++i) {
-		auto* rotor = new (_Rotors) FRWA_RotorLookupData { i, { data[i].BoneName }};
+		auto* rotor = new (m_Rotors) FRWA_RotorLookupData { i, { data[i].BoneName }};
 		rotor->BoneRef.Initialize(requiredBones);
 	}
 
 	// Sort by bone index
-	_Rotors.Sort([](const FRWA_RotorLookupData& a, const FRWA_RotorLookupData& b) -> bool {
+	m_Rotors.Sort([](FRWA_RotorLookupData const& a, FRWA_RotorLookupData const& b) -> bool {
 		return a.BoneRef.BoneIndex < b.BoneRef.BoneIndex;
 	});
 }
 
 auto Self::IsValidToEvaluate(
-	const USkeleton* skel,
-	const FBoneContainer& requiredBones
-) -> bool {
-	for (const auto& rotor : _Rotors)
+	USkeleton const* skel,
+	FBoneContainer const& requiredBones)
+	-> bool
+{
+	for (auto const& rotor : m_Rotors)
 		if (rotor.BoneRef.IsValidToEvaluate(requiredBones))
 			return true;
 
@@ -42,14 +46,14 @@ auto Self::IsValidToEvaluate(
 
 void Self::EvaluateSkeletalControl_AnyThread(
 	FComponentSpacePoseContext& inout_ctx,
-	TArray<FBoneTransform>& out_boneTransforms
-) {
+	TArray<FBoneTransform>& out_boneTransforms)
+{
 	check(out_boneTransforms.Num() == 0);
 
-	const auto& data = _Proxy->GetAnimData();
-	const auto& container = inout_ctx.Pose.GetPose().GetBoneContainer();
+	auto const& data = m_Proxy->GetAnimData();
+	auto const& container = inout_ctx.Pose.GetPose().GetBoneContainer();
 
-	for (const auto& rotor : _Rotors) {
+	for (auto const& rotor : m_Rotors) {
 		if (!rotor.BoneRef.IsValidToEvaluate())
 			continue;
 

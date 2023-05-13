@@ -11,23 +11,23 @@ UCLASS(MinimalAPI)
 class UAnimGraphNode_RWA_RotorController : public UAnimGraphNode_SkeletalControlBase {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, Category="Settings")
-	FAnimNode_RWA_RotorController _Node;
+	UPROPERTY(EditAnywhere, Category="Settings", DisplayName="Node")
+	FAnimNode_RWA_RotorController m_Node;
 
 public:
 	UAnimGraphNode_RWA_RotorController() : Super() {}
 
-	virtual auto GetNodeTitle(ENodeTitleType::Type type) const -> FText override;
-	virtual auto GetTooltipText() const -> FText override;
-	virtual auto IsCompatibleWithGraph(const UEdGraph* graph) const -> bool override;
+	auto GetNodeTitle(ENodeTitleType::Type type) const -> FText override;
+	auto GetTooltipText() const -> FText override;
+	auto IsCompatibleWithGraph(UEdGraph const* graph) const -> bool override;
 
-	virtual void ValidateAnimNodePostCompile(
+	void ValidateAnimNodePostCompile(
 		FCompilerResultsLog& msgLog,
 		UAnimBlueprintGeneratedClass* compiledClass,
-		int32 compiledNodeIdx
-	) override;
+		int32 compiledNodeIdx)
+		override;
 
 protected:
-	virtual auto GetControllerDescription() const -> FText override;
-	virtual auto GetNode() const -> const FAnimNode_SkeletalControlBase* override;
+	auto GetControllerDescription() const -> FText override;
+	auto GetNode() const -> FAnimNode_SkeletalControlBase const* override;
 };

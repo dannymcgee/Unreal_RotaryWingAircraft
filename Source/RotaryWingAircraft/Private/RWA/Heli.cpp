@@ -14,23 +14,26 @@ DEFINE_LOG_CATEGORY(LogHeli)
 
 // Initialization --------------------------------------------------------------
 
-Self::ARWA_Heli() : Super() {
+Self::ARWA_Heli() : Super()
+{
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
 
-	_Mesh = InitSkelMesh();
-	RootComponent = _Mesh;
+	m_Mesh = InitSkelMesh();
+	RootComponent = m_Mesh;
 
-	_VehicleMovement = InitVehicleMovement(_Mesh);
+	m_VehicleMovement = InitVehicleMovement(m_Mesh);
 }
 
-void Self::BeginPlay() {
+void Self::BeginPlay()
+{
 	Super::BeginPlay();
 
 	AddInputMappingContext();
 }
 
-auto Self::InitSkelMesh() -> USkeletalMeshComponent* {
+auto Self::InitSkelMesh() -> USkeletalMeshComponent*
+{
 	auto* mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("VehicleMesh"));
 	mesh->SetCollisionProfileName(UCollisionProfile::Vehicle_ProfileName);
 	mesh->BodyInstance.bSimulatePhysics = true;
@@ -43,7 +46,8 @@ auto Self::InitSkelMesh() -> USkeletalMeshComponent* {
 	return mesh;
 }
 
-auto Self::InitVehicleMovement(USkeletalMeshComponent* mesh) -> URWA_HeliMovementComponent* {
+auto Self::InitVehicleMovement(USkeletalMeshComponent* mesh) -> URWA_HeliMovementComponent*
+{
 	auto* cmp = CreateDefaultSubobject<URWA_HeliMovementComponent>(TEXT("VehicleMovement"));
 	cmp->SetIsReplicated(true);
 	cmp->UpdatedComponent = mesh;
@@ -54,32 +58,38 @@ auto Self::InitVehicleMovement(USkeletalMeshComponent* mesh) -> URWA_HeliMovemen
 
 // Getters ---------------------------------------------------------------------
 
-auto Self::GetMesh() const -> USkeletalMeshComponent* {
-	return _Mesh;
+auto Self::GetMesh() const -> USkeletalMeshComponent*
+{
+	return m_Mesh;
 }
 
-auto Self::GetVehicleMovement() const -> URWA_HeliMovementComponent* {
-	return _VehicleMovement;
+auto Self::GetVehicleMovement() const -> URWA_HeliMovementComponent*
+{
+	return m_VehicleMovement;
 }
 
-auto Self::GetMovementComponent() const -> UPawnMovementComponent* {
-	return _VehicleMovement;
+auto Self::GetMovementComponent() const -> UPawnMovementComponent*
+{
+	return m_VehicleMovement;
 }
 
 
 // Input handling --------------------------------------------------------------
 
-void Self::AddInputMappingContext() const {
+void Self::AddInputMappingContext() const
+{
 	if (auto* inputSubsys = GetInputSubsystem())
 		inputSubsys->AddMappingContext(DefaultMappingContext, 0);
 }
 
-void Self::RemoveInputMappingContext() const {
+void Self::RemoveInputMappingContext() const
+{
 	if (auto* inputSubsys = GetInputSubsystem())
 		inputSubsys->RemoveMappingContext(DefaultMappingContext);
 }
 
-auto Self::GetInputSubsystem() const -> IEnhancedInputSubsystemInterface* {
+auto Self::GetInputSubsystem() const -> IEnhancedInputSubsystemInterface*
+{
 	auto* pc = Cast<APlayerController>(Controller);
 	if (pc == nullptr) return nullptr;
 
@@ -89,7 +99,8 @@ auto Self::GetInputSubsystem() const -> IEnhancedInputSubsystemInterface* {
 	return ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(lp);
 }
 
-void Self::SetupPlayerInputComponent(UInputComponent* inputCmp) {
+void Self::SetupPlayerInputComponent(UInputComponent* inputCmp)
+{
 	if (auto* input = CastChecked<UEnhancedInputComponent>(inputCmp)) {
 		input->BindAction(CyclicAction, ETriggerEvent::Triggered, this, &Self::OnCyclic);
 		input->BindAction(CyclicAction, ETriggerEvent::Completed, this, &Self::OnCyclic);
@@ -109,21 +120,24 @@ void Self::SetupPlayerInputComponent(UInputComponent* inputCmp) {
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
-void Self::OnCyclic(const FInputActionValue& value) {
+void Self::OnCyclic(FInputActionValue const& value)
+{
 	auto input = value.Get<FVector2D>();
 
-	_VehicleMovement->SetPitchInput(input.Y);
-	_VehicleMovement->SetRollInput(input.X);
+	m_VehicleMovement->SetPitchInput(input.Y);
+	m_VehicleMovement->SetRollInput(input.X);
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
-void Self::OnCollective(const FInputActionValue& value) {
-	_VehicleMovement->SetCollectiveInput(value.Get<float>());
+void Self::OnCollective(FInputActionValue const& value)
+{
+	m_VehicleMovement->SetCollectiveInput(value.Get<float>());
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
-void Self::OnAntiTorque(const FInputActionValue& value) {
-	_VehicleMovement->SetYawInput(value.Get<float>());
+void Self::OnAntiTorque(FInputActionValue const& value)
+{
+	m_VehicleMovement->SetYawInput(value.Get<float>());
 }
 
 

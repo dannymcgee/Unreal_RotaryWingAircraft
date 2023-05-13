@@ -10,7 +10,8 @@ DEFINE_LOG_CATEGORY(LogHeliMvmt)
 #define Self URWA_HeliMovementComponent
 
 
-Self::URWA_HeliMovementComponent() : Super() {
+Self::URWA_HeliMovementComponent() : Super()
+{
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = true;
 
@@ -20,7 +21,8 @@ Self::URWA_HeliMovementComponent() : Super() {
 
 // Lifecycle & Events ----------------------------------------------------------
 
-void Self::TickComponent(float deltaTime, ELevelTick type, TickFn* fn) {
+void Self::TickComponent(float deltaTime, ELevelTick type, TickFn* fn)
+{
 	Super::TickComponent(deltaTime, type, fn);
 
 	if (auto* body = GetBodyInstance())
@@ -30,7 +32,8 @@ void Self::TickComponent(float deltaTime, ELevelTick type, TickFn* fn) {
 	}
 }
 
-void Self::SetUpdatedComponent(USceneComponent* cmp) {
+void Self::SetUpdatedComponent(USceneComponent* cmp)
+{
 	Super::SetUpdatedComponent(cmp);
 
 	PawnOwner = cmp ? Cast<APawn>(cmp->GetOwner()) : nullptr;
@@ -42,16 +45,18 @@ void Self::SetUpdatedComponent(USceneComponent* cmp) {
 	}
 }
 
-void Self::SubstepTick(float deltaTime, FBodyInstance* body) {
+void Self::SubstepTick(float deltaTime, FBodyInstance* body)
+{
 	UpdateEngineState(deltaTime);
 	UpdatePhysicsState(deltaTime, body);
 	UpdateSimulation(deltaTime, body);
 }
 
-void Self::UpdateEngineState(float deltaTime) {
+void Self::UpdateEngineState(float deltaTime)
+{
 	using namespace RWA;
 
-	auto& state = _EngineState;
+	auto& state = m_EngineState;
 
 	switch (state.Phase) {
 		case EEngineState::SpoolingUp: {
@@ -90,43 +95,45 @@ void Self::UpdateEngineState(float deltaTime) {
 	}
 }
 
-void Self::UpdatePhysicsState(float deltaTime, FBodyInstance* body) {
+void Self::UpdatePhysicsState(float deltaTime, FBodyInstance* body)
+{
 	auto transform = GetOwner()->GetActorTransform();
 
-	FPhysicsCommand::ExecuteRead(body->ActorHandle, [&](const FPhysicsActorHandle& handle) {
+	FPhysicsCommand::ExecuteRead(body->ActorHandle, [&](FPhysicsActorHandle const& handle) {
 		auto mass = FPhysicsInterface::GetMass_AssumesLocked(handle);
 		auto com = FPhysicsInterface::GetComTransform_AssumesLocked(handle).GetLocation();
 		auto lv = body->GetUnrealWorldVelocity_AssumesLocked();
 		auto av = body->GetUnrealWorldAngularVelocityInRadians_AssumesLocked();
-		auto dv = lv - _PhysicsState.LinearVelocity;
+		auto dv = lv - m_PhysicsState.LinearVelocity;
 		auto aoa = FMath::Asin((Up() | lv) / lv.Size());
 		auto gForce = transform.InverseTransformVector(dv / (k_Gravity * deltaTime));
 
-		_PhysicsState.Mass = mass;
-		_PhysicsState.CoM = com;
-		_PhysicsState.LinearVelocity = lv;
-		_PhysicsState.AngularVelocity = av;
-		_PhysicsState.DeltaVelocity = dv;
-		_PhysicsState.GForce = gForce;
-		_PhysicsState.AngleOfAttack = aoa;
+		m_PhysicsState.Mass = mass;
+		m_PhysicsState.CoM = com;
+		m_PhysicsState.LinearVelocity = lv;
+		m_PhysicsState.AngularVelocity = av;
+		m_PhysicsState.DeltaVelocity = dv;
+		m_PhysicsState.GForce = gForce;
+		m_PhysicsState.AngleOfAttack = aoa;
 
 		if (lv.Size() < 100) {
-			_PhysicsState.CrossSectionalArea = 0;
+			m_PhysicsState.CrossSectionalArea = 0;
 			return;
 		}
 
-		_PhysicsState.CrossSectionalArea =
+		m_PhysicsState.CrossSectionalArea =
 			ComputeCrossSectionalArea(body, handle, lv.GetSafeNormal());
 	});
 }
 
-void Self::UpdateSimulation(float deltaTime, FBodyInstance* body) const {
-	auto mass = _PhysicsState.Mass;
-	auto com = _PhysicsState.CoM;
-	auto lv = _PhysicsState.LinearVelocity;
-	auto av = _PhysicsState.AngularVelocity;
-	auto surfArea = _PhysicsState.CrossSectionalArea;
-	auto aoa = _PhysicsState.AngleOfAttack;
+void Self::UpdateSimulation(float deltaTime, FBodyInstance* body) const
+{
+	auto mass = m_PhysicsState.Mass;
+	auto com = m_PhysicsState.CoM;
+	auto lv = m_PhysicsState.LinearVelocity;
+	auto av = m_PhysicsState.AngularVelocity;
+	auto surfArea = m_PhysicsState.CrossSectionalArea;
+	auto aoa = m_PhysicsState.AngleOfAttack;
 
 	auto dv = ComputeThrust(com, mass);
 	auto drag = ComputeDrag(lv, aoa, surfArea);
@@ -148,10 +155,11 @@ void Self::UpdateSimulation(float deltaTime, FBodyInstance* body) const {
 // Physics Calculations --------------------------------------------------------
 
 auto Self::ComputeCrossSectionalArea(
-	const FBodyInstance* body,
-	const FPhysicsActorHandle& handle,
-	FVector velocityNormal
-) const -> float {
+	FBodyInstance const* body,
+	FPhysicsActorHandle const& handle,
+	FVector velocityNormal)
+	const -> float
+{
 	auto bb = FPhysicsInterface::GetBounds_AssumesLocked(handle);
 	auto extent = bb.GetExtent().GetAbsMax();
 
@@ -186,11 +194,12 @@ auto Self::ComputeCrossSectionalArea(
 }
 
 
-auto Self::ComputeThrust(const FVector& pos, float mass) const -> FVector {
+auto Self::ComputeThrust(FVector const& pos, float mass) const -> FVector
+{
 	using namespace RWA;
 
 	// Scale the collective input by the current engine power
-	auto scaledInput = _Input.Collective * _EngineState.PowerAlpha;
+	auto scaledInput = m_Input.Collective * m_EngineState.PowerAlpha;
 
 	// Compute the base thrust magnitude
 	auto magicTuningValue = 3.4525;
@@ -210,7 +219,8 @@ auto Self::ComputeThrust(const FVector& pos, float mass) const -> FVector {
 	return mass * ((thrust * altPenalty) + groundEffect) * Up();
 }
 
-auto Self::ComputeDrag(const FVector& velocity, float aoa, float area) const -> FVector {
+auto Self::ComputeDrag(FVector const& velocity, float aoa, float area) const -> FVector
+{
 	using namespace RWA;
 
 	auto aoaAbs = FMath::Abs(aoa);
@@ -242,10 +252,11 @@ auto Self::ComputeDrag(const FVector& velocity, float aoa, float area) const -> 
 	return dragVector + liftVector;
 }
 
-auto Self::ComputeTorque(const FVector& angularVelocity, float mass) const -> FVector {
-	auto pitch = Right() * _Input.Pitch * CyclicSensitivity;
-	auto roll = Forward() * -_Input.Roll * CyclicSensitivity;
-	auto yaw = Up() * _Input.Yaw * AntiTorqueSensitivity;
+auto Self::ComputeTorque(FVector const& angularVelocity, float mass) const -> FVector
+{
+	auto pitch = Right() * m_Input.Pitch * CyclicSensitivity;
+	auto roll = Forward() * -m_Input.Roll * CyclicSensitivity;
+	auto yaw = Up() * m_Input.Yaw * AntiTorqueSensitivity;
 
 	auto target = pitch + roll + yaw;
 	auto inputTorque = target - angularVelocity;
@@ -254,10 +265,11 @@ auto Self::ComputeTorque(const FVector& angularVelocity, float mass) const -> FV
 }
 
 void Self::ComputeAeroTorque(
-	const FVector& velocity,
+	FVector const& velocity,
 	float mass,
-	FVector& inout_torque
-) const {
+	FVector& inout_torque)
+	const
+{
 	auto* pawn = GetPawn();
 	if (!ensure(pawn)) return;
 
@@ -279,12 +291,14 @@ void Self::ComputeAeroTorque(
 
 // Utility ---------------------------------------------------------------------
 
-auto Self::GetPawn() const -> APawn* {
+auto Self::GetPawn() const -> APawn*
+{
 	if (!UpdatedComponent) return nullptr;
 	return Cast<APawn>(UpdatedComponent->GetOwner());
 }
 
-auto Self::GetBodyInstance() const -> FBodyInstance* {
+auto Self::GetBodyInstance() const -> FBodyInstance*
+{
 	if (!UpdatedComponent) return nullptr;
 
 	auto* cmp = Cast<USkeletalMeshComponent>(UpdatedComponent);
@@ -293,7 +307,8 @@ auto Self::GetBodyInstance() const -> FBodyInstance* {
 	return cmp->GetBodyInstance();
 }
 
-auto Self::Forward() const -> FVector {
+auto Self::Forward() const -> FVector
+{
 	auto* pawn = GetPawn();
 	if (ensure(pawn != nullptr))
 		return pawn->GetActorForwardVector();
@@ -301,7 +316,8 @@ auto Self::Forward() const -> FVector {
 	return FVector::ForwardVector;
 }
 
-auto Self::Right() const -> FVector {
+auto Self::Right() const -> FVector
+{
 	auto* pawn = GetPawn();
 	if (ensure(pawn != nullptr))
 		return pawn->GetActorRightVector();
@@ -309,7 +325,8 @@ auto Self::Right() const -> FVector {
 	return FVector::RightVector;
 }
 
-auto Self::Up() const -> FVector {
+auto Self::Up() const -> FVector
+{
 	auto* pawn = GetPawn();
 	if (ensure(pawn != nullptr))
 		return pawn->GetActorUpVector();
@@ -321,12 +338,13 @@ auto Self::Up() const -> FVector {
 // Debug -----------------------------------------------------------------------
 
 void Self::DebugPhysicsSimulation(
-	const FVector& centerOfMass,
-	const FVector& linearVelocity,
-	const FVector& thrust,
-	const FVector& drag,
-	double crossSectionalArea
-) const {
+	FVector const& centerOfMass,
+	FVector const& linearVelocity,
+	FVector const& thrust,
+	FVector const& drag,
+	double crossSectionalArea)
+	const
+{
 	// Draw a sphere around the center of mass
 	DrawDebugSphere(GetWorld(), centerOfMass, 35, 8, FColor::White, false, -1, 128, 5);
 
@@ -381,42 +399,51 @@ void Self::DebugPhysicsSimulation(
 
 // Blueprint Getters -----------------------------------------------------------
 
-auto Self::GetCurrentRPM() const -> float {
-	return _EngineState.RPM;
+auto Self::GetCurrentRPM() const -> float
+{
+	return m_EngineState.RPM;
 }
 
-auto Self::GetCurrentCollective() const -> float {
-	return _Input.Collective;
+auto Self::GetCurrentCollective() const -> float
+{
+	return m_Input.Collective;
 }
 
-auto Self::GetCurrentCyclic() const -> FVector2D {
-	return { _Input.Roll, _Input.Pitch };
+auto Self::GetCurrentCyclic() const -> FVector2D
+{
+	return { m_Input.Roll, m_Input.Pitch };
 }
 
-auto Self::GetCurrentTorque() const -> float {
-	return _Input.Yaw;
+auto Self::GetCurrentTorque() const -> float
+{
+	return m_Input.Yaw;
 }
 
-auto Self::GetVelocity() const -> FVector {
-	return _PhysicsState.LinearVelocity;
+auto Self::GetVelocity() const -> FVector
+{
+	return m_PhysicsState.LinearVelocity;
 }
 
-auto Self::GetLateralAirspeed() const -> float {
-	auto lv = _PhysicsState.LinearVelocity;
+auto Self::GetLateralAirspeed() const -> float
+{
+	auto lv = m_PhysicsState.LinearVelocity;
 	auto latVel = FVector { lv.X, lv.Y, 0 };
 
 	return latVel.Size();
 }
 
-auto Self::GetLateralAirspeedKnots() const -> float {
+auto Self::GetLateralAirspeedKnots() const -> float
+{
 	return GetLateralAirspeed() * k_CmPerSecToKnots;
 }
 
-auto Self::GetVerticalAirspeed() const -> float {
-	return _PhysicsState.LinearVelocity.Z;
+auto Self::GetVerticalAirspeed() const -> float
+{
+	return m_PhysicsState.LinearVelocity.Z;
 }
 
-auto Self::GetHeadingDegrees() const -> float {
+auto Self::GetHeadingDegrees() const -> float
+{
 	auto direction = FVector
 		::VectorPlaneProject(Forward(), FVector::UpVector)
 		.GetSafeNormal();
@@ -424,14 +451,15 @@ auto Self::GetHeadingDegrees() const -> float {
 	return FMath::RadiansToDegrees(FMath::Atan2(-direction.Y, -direction.X)) + 180.0;
 }
 
-auto Self::GetRadarAltitude() const -> float {
+auto Self::GetRadarAltitude() const -> float
+{
 	auto* pawn = GetPawn();
 	if (pawn == nullptr) return INFINITY;
 
 	auto params = FCollisionQueryParams::DefaultQueryParam;
 	params.AddIgnoredActor(pawn);
 
-	auto start = _PhysicsState.CoM;
+	auto start = m_PhysicsState.CoM;
 	auto end = start + FVector::DownVector * 2000'00.f;
 	auto hit = FHitResult {};
 
@@ -444,33 +472,39 @@ auto Self::GetRadarAltitude() const -> float {
 
 // Blueprint Methods -----------------------------------------------------------
 
-void Self::StartEngine() {
-	if (_EngineState.Phase != EEngineState::Running)
-		_EngineState.Phase = EEngineState::SpoolingUp;
+void Self::StartEngine()
+{
+	if (m_EngineState.Phase != EEngineState::Running)
+		m_EngineState.Phase = EEngineState::SpoolingUp;
 }
 
-void Self::StopEngine() {
-	if (_EngineState.Phase != EEngineState::Off)
-		_EngineState.Phase = EEngineState::SpoolingDown;
+void Self::StopEngine()
+{
+	if (m_EngineState.Phase != EEngineState::Off)
+		m_EngineState.Phase = EEngineState::SpoolingDown;
 }
 
-void Self::SetCollectiveInput(float value) {
-	if (value > 0 && _EngineState.Phase == EEngineState::Off)
+void Self::SetCollectiveInput(float value)
+{
+	if (value > 0 && m_EngineState.Phase == EEngineState::Off)
 		StartEngine();
 
-	_Input.Collective = value;
+	m_Input.Collective = value;
 }
 
-void Self::SetPitchInput(float value) {
-	_Input.Pitch = value;
+void Self::SetPitchInput(float value)
+{
+	m_Input.Pitch = value;
 }
 
-void Self::SetRollInput(float value) {
-	_Input.Roll = value;
+void Self::SetRollInput(float value)
+{
+	m_Input.Roll = value;
 }
 
-void Self::SetYawInput(float value) {
-	_Input.Yaw = value;
+void Self::SetYawInput(float value)
+{
+	m_Input.Yaw = value;
 }
 
 

@@ -12,9 +12,9 @@ struct FRWA_RotorLookupData {
 	FBoneReference BoneRef;
 
 	FRWA_RotorLookupData() = default;
-	FRWA_RotorLookupData(int32 idx, FBoneReference boneRef)
-		: Index { idx }
-		, BoneRef { boneRef }
+	FRWA_RotorLookupData(int32 idx, FBoneReference const& boneRef)
+		: Index(idx)
+		, BoneRef(boneRef)
 	{}
 };
 
@@ -26,22 +26,22 @@ struct ROTARYWINGAIRCRAFT_API FAnimNode_RWA_RotorController : public FAnimNode_S
 public:
 	FAnimNode_RWA_RotorController() = default;
 
-	virtual void GatherDebugData(FNodeDebugData& data) override;
-	virtual void Initialize_AnyThread(const FAnimationInitializeContext& ctx) override;
+	void GatherDebugData(FNodeDebugData& data) override;
+	void Initialize_AnyThread(FAnimationInitializeContext const& ctx) override;
 
-	virtual auto IsValidToEvaluate(
-		const USkeleton* skel,
-		const FBoneContainer& requiredBones
-	) -> bool override;
+	auto IsValidToEvaluate(
+		USkeleton const* skel,
+		FBoneContainer const& requiredBones)
+		-> bool override;
 
-	virtual void EvaluateSkeletalControl_AnyThread(
+	void EvaluateSkeletalControl_AnyThread(
 		FComponentSpacePoseContext& inout_ctx,
-		TArray<FBoneTransform>& out_boneTransforms
-	) override;
+		TArray<FBoneTransform>& out_boneTransforms)
+		override;
 
 private:
-	const FRWA_HeliAnimInstanceProxy* _Proxy = nullptr;
-	TArray<FRWA_RotorLookupData> _Rotors = {};
+	FRWA_HeliAnimInstanceProxy const* m_Proxy = nullptr;
+	TArray<FRWA_RotorLookupData> m_Rotors = {};
 
-	virtual void InitializeBoneReferences(const FBoneContainer& requiredBones) override;
+	void InitializeBoneReferences(FBoneContainer const& requiredBones) override;
 };

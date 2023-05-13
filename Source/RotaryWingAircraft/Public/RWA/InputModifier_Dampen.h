@@ -14,14 +14,14 @@ public:
 	float LerpSpeed = 5.f;
 
 protected:
-	virtual auto ModifyRaw_Implementation(
-		const UEnhancedPlayerInput* input,
+	auto ModifyRaw_Implementation(
+		UEnhancedPlayerInput const* input,
 		FInputActionValue value,
-		float deltaTime
-	) -> FInputActionValue override;
+		float deltaTime)
+		-> FInputActionValue override;
 
 private:
-	FInputActionValue _LastValue;
+	FInputActionValue m_LastValue;
 
 	auto ModifyRaw(float value, float deltaTime) const -> FInputActionValue;
 	auto ModifyRaw(FVector2D value, float deltaTime) const -> FInputActionValue;

@@ -153,14 +153,14 @@ public:
 
 public:
 
-	virtual void TickComponent(float deltaTime, ELevelTick type, TickFn* fn) override;
+	void TickComponent(float deltaTime, ELevelTick type, TickFn* fn) override;
 
 
 protected:
 
 	FCalculateCustomPhysics OnCalculateCustomPhysics;
 
-	virtual void SetUpdatedComponent(USceneComponent* cmp) override;
+	void SetUpdatedComponent(USceneComponent* cmp) override;
 
 	void SubstepTick(float deltaTime, FBodyInstance* body);
 
@@ -210,12 +210,12 @@ private:
 
 	// Details ------------------------------------------------------------------
 
-	FInput _Input;
-	FEngineState _EngineState;
-	FPhysicsState _PhysicsState;
+	FInput m_Input;
+	FEngineState m_EngineState;
+	FPhysicsState m_PhysicsState;
 
-	static constexpr float k_Gravity = -981;
-	static constexpr float k_CmPerSecToKnots = 0.019438;
+	inline static float const k_Gravity = -981;
+	inline static float const k_CmPerSecToKnots = 0.019438;
 
 	auto GetPawn() const -> APawn*;
 	auto GetBodyInstance() const -> FBodyInstance*;
@@ -225,25 +225,25 @@ private:
 	 * callback with a locked mutex.
 	 */
 	auto ComputeCrossSectionalArea(
-		const FBodyInstance* body,
-		const FPhysicsActorHandle& handle,
-		FVector velocityNormal
-	) const -> float;
+		FBodyInstance const* body,
+		FPhysicsActorHandle const& handle,
+		FVector velocityNormal)
+		const -> float;
 
-	auto ComputeThrust(const FVector& pos, float mass) const -> FVector;
-	auto ComputeDrag(const FVector& velocity, float aoa, float area) const -> FVector;
-	auto ComputeTorque(const FVector& angularVelocity, float mass) const -> FVector;
-	void ComputeAeroTorque(const FVector& velocity, float mass, FVector& inout_torque) const;
+	auto ComputeThrust(FVector const& pos, float mass) const -> FVector;
+	auto ComputeDrag(FVector const& velocity, float aoa, float area) const -> FVector;
+	auto ComputeTorque(FVector const& angularVelocity, float mass) const -> FVector;
+	void ComputeAeroTorque(FVector const& velocity, float mass, FVector& inout_torque) const;
 
 	auto Forward() const -> FVector;
 	auto Right() const -> FVector;
 	auto Up() const -> FVector;
 
 	void DebugPhysicsSimulation(
-		const FVector& centerOfMass,
-		const FVector& linearVelocity,
-		const FVector& thrust,
-		const FVector& drag,
-		double crossSectionalArea
-	) const;
+		FVector const& centerOfMass,
+		FVector const& linearVelocity,
+		FVector const& thrust,
+		FVector const& drag,
+		double crossSectionalArea)
+		const;
 };

@@ -8,14 +8,16 @@
 #define LOCTEXT_NAMESPACE "A3Nodes"
 
 
-auto Self::GetNodeTitle(ENodeTitleType::Type type) const -> FText {
+auto Self::GetNodeTitle(ENodeTitleType::Type type) const -> FText
+{
 	if (type == ENodeTitleType::ListView || type == ENodeTitleType::MenuTitle)
 		return GetControllerDescription();
 
 	return LOCTEXT("AnimGraphNode_RWA_RotorController", "Rotor Controller");
 }
 
-auto Self::GetTooltipText() const -> FText {
+auto Self::GetTooltipText() const -> FText
+{
 	return LOCTEXT(
 		"AnimGraphNode_RWA_RotorController_Tooltip",
 		"Rotates the aircraft's rotor systems based on Heli Movement Component "
@@ -23,7 +25,8 @@ auto Self::GetTooltipText() const -> FText {
 	);
 }
 
-auto Self::IsCompatibleWithGraph(const UEdGraph* graph) const -> bool {
+auto Self::IsCompatibleWithGraph(UEdGraph const* graph) const -> bool
+{
 	auto* bp = FBlueprintEditorUtils::FindBlueprintForGraph(graph);
 	return (
 		bp != nullptr
@@ -35,8 +38,8 @@ auto Self::IsCompatibleWithGraph(const UEdGraph* graph) const -> bool {
 void Self::ValidateAnimNodePostCompile(
 	FCompilerResultsLog& msgLog,
 	UAnimBlueprintGeneratedClass* compiledClass,
-	int32 compiledNodeIdx
-) {
+	int32 compiledNodeIdx)
+{
 	if (!compiledClass->IsChildOf<URWA_HeliAnimInstance>())
 		msgLog.Error(
 			TEXT("@@ is only allowed in HeliAnimInstance. Change animation "
@@ -45,15 +48,17 @@ void Self::ValidateAnimNodePostCompile(
 		);
 }
 
-auto Self::GetControllerDescription() const -> FText {
+auto Self::GetControllerDescription() const -> FText
+{
 	return LOCTEXT(
 		"AnimGraphNode_RWA_RotorController",
 		"Rotor Controller for Rotary-Wing Aircraft"
 	);
 }
 
-auto Self::GetNode() const -> const FAnimNode_SkeletalControlBase* {
-	return &_Node;
+auto Self::GetNode() const -> FAnimNode_SkeletalControlBase const*
+{
+	return &m_Node;
 }
 
 
