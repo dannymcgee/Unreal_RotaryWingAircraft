@@ -191,6 +191,7 @@ private:
 	struct FEngineState {
 		EEngineState Phase = EEngineState::Off;
 		float SpoolAlpha = 0;
+		float PowerAlpha = 0;
 		float RPM = 0;
 	};
 

@@ -1,18 +1,11 @@
 ﻿#include "HeliMvmtCmp.h"
 
+#include "RWA_Util.h"
+
 DEFINE_LOG_CATEGORY(LogHeliMvmt)
 
 #define HELI_LOG(msg, ...) UE_LOG(LogHeliMvmt, Log, TEXT(msg), __VA_ARGS__)
 #define HELI_WARN(msg, ...) UE_LOG(LogHeliMvmt, Warning, TEXT(msg), __VA_ARGS__)
-
-
-// TODO: This does not belong here
-template <typename T>
-static constexpr FORCEINLINE
-auto InverseLerp(T value, T min, T max) -> T {
-	return (value - min) / (max - min);
-}
-MIX_FLOATS_3_ARGS(InverseLerp);
 
 
 UHeliMvmtCmp::UHeliMvmtCmp() : Super() {
@@ -54,30 +47,40 @@ void UHeliMvmtCmp::SubstepTick(float deltaTime, FBodyInstance* body) {
 }
 
 void UHeliMvmtCmp::UpdateEngineState(float deltaTime) {
+	using namespace RWA;
+	
 	auto& state = _EngineState;
 
 	switch (state.Phase) {
 		case EEngineState::SpoolingUp: {
 			state.SpoolAlpha += (1 / SpoolUpTime) * deltaTime;
 
+			auto sinAlpha = Util::CurveSin(state.SpoolAlpha);
+			state.PowerAlpha = Util::InverseLerp(sinAlpha, 0.667, 1.0);
+
 			if (state.SpoolAlpha >= 1) {
 				state.SpoolAlpha = 1;
+				state.PowerAlpha = 1;
 				state.Phase = EEngineState::Running;
 				state.RPM = RPM;
 			} else {
-				state.RPM = FMath::InterpSinInOut(0.f, RPM, state.SpoolAlpha);
+				state.RPM = RPM * sinAlpha;
 			}
 		} break;
 
 		case EEngineState::SpoolingDown: {
 			state.SpoolAlpha -= (1 / SpoolUpTime) * deltaTime;
 
+			auto sinAlpha = Util::CurveSin(state.SpoolAlpha);
+			state.PowerAlpha = Util::InverseLerp(sinAlpha, 0.667, 1.0);
+
 			if (state.SpoolAlpha <= 0) {
 				state.SpoolAlpha = 0;
+				state.PowerAlpha = 0;
 				state.Phase = EEngineState::Off;
 				state.RPM = 0;
 			} else {
-				state.RPM = FMath::InterpSinInOut(0.f, RPM, state.SpoolAlpha);
+				state.RPM = RPM * sinAlpha;
 			}
 		} break;
 
@@ -86,6 +89,8 @@ void UHeliMvmtCmp::UpdateEngineState(float deltaTime) {
 }
 
 void UHeliMvmtCmp::UpdatePhysicsState(float deltaTime, FBodyInstance* body) {
+	auto transform = GetOwner()->GetActorTransform();
+
 	FPhysicsCommand::ExecuteRead(body->ActorHandle, [&](const FPhysicsActorHandle& handle) {
 		auto mass = FPhysicsInterface::GetMass_AssumesLocked(handle);
 		auto com = FPhysicsInterface::GetComTransform_AssumesLocked(handle).GetLocation();
@@ -93,10 +98,7 @@ void UHeliMvmtCmp::UpdatePhysicsState(float deltaTime, FBodyInstance* body) {
 		auto av = body->GetUnrealWorldAngularVelocityInRadians_AssumesLocked();
 		auto dv = lv - _PhysicsState.LinearVelocity;
 		auto aoa = FMath::Asin((Up() | lv) / lv.Size());
-
-		auto gForce = GetOwner()
-			->GetActorTransform()
-			.InverseTransformVector(dv / (k_Gravity * deltaTime));
+		auto gForce = transform.InverseTransformVector(dv / (k_Gravity * deltaTime));
 
 		_PhysicsState.Mass = mass;
 		_PhysicsState.CoM = com;
@@ -183,20 +185,19 @@ auto UHeliMvmtCmp::ComputeCrossSectionalArea(
 
 
 auto UHeliMvmtCmp::ComputeThrust(const FVector& pos, float mass) const -> FVector {
+	using namespace RWA;
+	
 	// Scale the collective input by the current engine power
-	// (Limits thrust while the engine is spooling up/down)
-	auto power = FMath::Clamp(InverseLerp(_EngineState.RPM, RPM * 0.667, RPM), 0, 1);
-	auto scaledInput = _Input.Collective * power;
+	auto scaledInput = _Input.Collective * _EngineState.PowerAlpha;
 
-	// Factor for gravity
-	auto thrust = scaledInput >= 0
-		? FMath::Lerp(0.0, -k_Gravity + EnginePower, scaledInput)
-		: FMath::Lerp(0.0, k_Gravity + -EnginePower, FMath::Abs(scaledInput));
+	// Compute the base thrust magnitude
+	auto magicTuningValue = 3.4525;
+	auto thrust = scaledInput * EnginePower * magicTuningValue;
 
 	// Ground effect - increases rotor efficiency when altitude < 80m
 	// TODO: Make the ground effect altitude curve configurable
 	auto agl = GetRadarAltitude();
-	auto geAlpha = FMath::Clamp(InverseLerp(agl, 80'00, 0), 0, 1);
+	auto geAlpha = Util::InverseLerp(agl, 80'00, 0);
 	auto groundEffect = FMath::Clamp(geAlpha * EnginePower * scaledInput, 0, EnginePower);
 
 	// Altitude penalty - decreases rotor efficiency at high altitudes
@@ -208,12 +209,14 @@ auto UHeliMvmtCmp::ComputeThrust(const FVector& pos, float mass) const -> FVecto
 }
 
 auto UHeliMvmtCmp::ComputeDrag(const FVector& velocity, float aoa, float area) const -> FVector {
+	using namespace RWA;
+	
 	auto aoaAbs = FMath::Abs(aoa);
 	auto cd = 0.0;
 	if (DragCoefficientCurve) {
 		cd = DragCoefficientCurve->GetFloatValue(FMath::RadiansToDegrees(aoaAbs));
 	} else {
-		auto aoaAlpha = FMath::Clamp(InverseLerp(aoaAbs, 0, PI / 2), 0, 1);
+		auto aoaAlpha = Util::InverseLerp(aoaAbs, 0, PI / 2);
 		cd = FMath::Lerp(0.667, 1.5, aoaAlpha);
 	}
 
