@@ -21,10 +21,10 @@ AnimData::FRWA_RotorAnimData(FRWA_RotorSetup const& rotor)
 void Proxy::SetMovementComponent(URWA_HeliMovementComponent const* mc)
 {
 	auto const& rotors = mc->Rotors;
-	_RotorInstances.Empty(rotors.Num());
+	m_RotorInstances.Empty(rotors.Num());
 
 	for (auto const& rotor : rotors)
-		_RotorInstances.Add({ rotor });
+		m_RotorInstances.Add({ rotor });
 }
 
 void Proxy::PreUpdate(UAnimInstance* instance, float deltaTime)
@@ -38,15 +38,15 @@ void Proxy::PreUpdate(UAnimInstance* instance, float deltaTime)
 	if (!mc) return;
 
 	auto deltaAngle = mc->GetCurrentRPM() * deltaTime * -k_RpmToRadsPerSec;
-	_RotorAngle = FMath::Fmod(_RotorAngle + deltaAngle, 2 * PI);
+	m_RotorAngle = FMath::Fmod(m_RotorAngle + deltaAngle, 2 * PI);
 
-	for (auto& rotor : _RotorInstances)
-		rotor.Rotation = FQuat { rotor.TorqueNormal, _RotorAngle }.Rotator();
+	for (auto& rotor : m_RotorInstances)
+		rotor.Rotation = FQuat(rotor.TorqueNormal, m_RotorAngle).Rotator();
 }
 
 auto Proxy::GetAnimData() const -> TArray<FRWA_RotorAnimData> const&
 {
-	return _RotorInstances;
+	return m_RotorInstances;
 }
 
 

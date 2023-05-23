@@ -35,9 +35,9 @@ private:
 	inline static constexpr
 	float k_RpmToRadsPerSec = 0.10472;
 
-	TArray<FRWA_RotorAnimData> _RotorInstances = {};
-	float _RotorSpeed = 0;
-	float _RotorAngle = 0;
+	TArray<FRWA_RotorAnimData> m_RotorInstances = {};
+	float m_RotorSpeed = 0;
+	float m_RotorAngle = 0;
 };
 
 
