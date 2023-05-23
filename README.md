@@ -25,24 +25,40 @@ challenge for players who want to invest the time to "master" it.
 
 ## HUD
 
-The current iteration of the HUD is implemented as a post-process material. This
-gives it a nice emissive quality with bloom at high brightness, but carries a
-substantial down-side in that it doesn't play nicely with TAA, TSR, or excessive
-motion blur. If you use this HUD as-is, you'll probably want to enable FXAA and
-set your Motion Blur > Target FPS to 60 or higher.
+The plugin also includes a modular, resolution-independent, DPI-aware aircraft
+HUD built from scratch with UMG and dynamic UI materials.
 
-It's also kind of convoluted to set up. You can take a look at the included
-`BP_HUDController` and `BP_SampleHeli` blueprints to see how it's done and
-adjust to your needs.
+![HUD Screenshot](https://media.githubusercontent.com/media/dannymcgee/Unreal_RotaryWingAircraft/d39e80bdea0254fc4f8b3df15b19a93b6f2def82/Resources/UMG_HUD_v2_0.jpg)
 
-A UMG version (and potentially a more ergonomic workflow for the post-process
-version) is in the works.
+### Features
+
+* Pitch ladder which tracks the aircraft's attitude relative to the horizon,
+  with lateral markers at 5&deg; intervals. (Currently this is pretty fixed,
+  with only the line thickness being configurable, but I plan to make this much
+  more customizable in a future update.)
+* Altitude, airspeed, and heading indicators with numeric displays and sliding
+  "rulers". The "rulers" are built from a generic `SteppedHashMarks` widget with
+  configuration options for line thickness, orientation, and the number of
+  coarse and fine subdivisions.
+* A "flight path" indicator that displays the current velocity vector of the
+  aircraft relative to the camera.
+* Axis readouts for the Collective and Anti-Torque inputs &mdash; particularly
+  handy when using digital inputs (like buttons or keyboard keys) to control
+  these axes.
 
 ## Getting Started
 
 ### Installing the plugin
 
-If you're already using Git in your project, it's recommended to add this repo
+First, make sure that your project is configured as a C++ project. If necessary,
+you can convert a Blueprint project to be C++-compatible by adding a temporary
+C++ class to the project. In the editor, select **Tools** > **New C++ Class...**
+and follow the steps in the wizard. You don't need to do anything with this
+class &mdash; you can delete it once you're done (and you can carry on using
+Blueprints as usual whether you keep it or not) &mdash; this is only necessary
+to generate the C++ project files so you can compile the project from source.
+
+If you're already using Git in your project, I would recommend adding this repo
 as a submodule. From the root directory:
 
 ```sh
@@ -59,7 +75,7 @@ git clone https://github.com/dannymcgee/Unreal_RotaryWingAircraft.git ./Plugins/
 files. This repo uses Git LFS for binaries (e.g., blueprints), which will not be
 included in the ZIP archive.
 
-Finally, add the plugin to your `*.uproject` definition:
+Add the plugin to your `*.uproject` definition:
 
 ```json
 {
@@ -74,19 +90,25 @@ Finally, add the plugin to your `*.uproject` definition:
 }
 ```
 
+Finally, close out the editor and compile the project in your IDE of choice. If
+you're planning on doing lots of C++ programming, I can highly recommend
+[Jetbrains Rider](https://www.jetbrains.com/rider/) &mdash; otherwise,  refer to
+Epic's documentation for configuring [Visual Studio](https://docs.unrealengine.com/5.1/en-US/setting-up-visual-studio-development-environment-for-cplusplus-projects-in-unreal-engine/)
+or [VS Code](https://docs.unrealengine.com/5.1/en-US/setting-up-visual-studio-code-for-unreal-engine/) for Unreal Engine.
+
 ### Taking it for a spin
 
 You can do the following to give the plugin a quick test drive before committing
 to use it in your project:
 
-1. Install the plugin.
+1. Follow the instructions above to install the plugin and compile your project.
 1. Navigate to **Project Settings** > **Project** > **Maps & Modes**.
-1. Set **Default GameMode** to `BP_SampleHeliGameMode`, and under
-   **Selected GameMode**, set **Default Pawn Class** to `BP_SampleHeli`.
-1. If you'd like to try out the included HUD, ensure that there's an enabled
-   PostProcessVolume actor in your scene with **Post Process Volume Settings |
-	Infinite Extent (Unbounded)** enabled.
-1. If you find that the HUD looks like a blurry mess, see the HUD notes above.
+1. Set **Default Pawn Class** to `BP_SampleHeli`.
+1. Add a default **Player Start** actor to your scene.
+1. Play in Editor
+
+Alternatively, you can clone this barebones [example project](https://github.com/dannymcgee/Unreal_HeliExample)
+where the steps above have already been done for you.
 
 ### Setting up a new helicopter from scratch
 
