@@ -8,12 +8,18 @@ public class RotaryWingAircraft : ModuleRules {
 			"AnimGraphRuntime",
 			"Core",
 			"EnhancedInput",
+			"Slate",
+			"SlateCore",
+			"UMG",
 		});
 
 		PrivateDependencyModuleNames.AddRange(new [] {
 			"CoreUObject",
 			"Engine",
 			"PhysicsCore",
+			"RenderCore",
+			"RHI",
+			"RHICore",
 		});
 	}
 }
