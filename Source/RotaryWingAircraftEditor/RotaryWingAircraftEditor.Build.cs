@@ -15,6 +15,8 @@ public class RotaryWingAircraftEditor : ModuleRules {
 			"CoreUObject",
 			"Engine",
 			"UnrealEd",
+			"Slate",
+			"SlateCore",
 		});
 	}
 }

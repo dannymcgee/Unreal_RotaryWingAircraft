@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "InputModifiers.h"
@@ -89,6 +89,11 @@ protected:
 		float deltaTime)
 		-> FInputActionValue override;
 
+	// UObject interface
+public:
+	void PostEditChangeProperty(FPropertyChangedEvent& event) override;
+	void PostLoad() override;
+
 private:
 	void SetupCurves();
 
@@ -96,9 +101,14 @@ private:
 	auto ModifyRaw(FVector2D value, float deltaTime) const -> FInputActionValue;
 	auto ModifyRaw(FVector value, float deltaTime) const -> FInputActionValue;
 
+	void Temp_PrintPropValues(FString const& header = "") const;
+
 	enum EPhase { None, Rising, Falling };
 
+	UPROPERTY(VisibleAnywhere, DisplayName="Rising Curve (read-only)")
 	FCubicBezier m_CurveIn;
+
+	UPROPERTY(VisibleAnywhere, DisplayName="Falling Curve (read-only)")
 	FCubicBezier m_CurveOut;
 
 	FCubicBezier const* m_ActiveCurve = nullptr;

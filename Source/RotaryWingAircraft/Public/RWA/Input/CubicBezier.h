@@ -10,11 +10,11 @@ struct FCubicBezier {
 
 public:
 	using Point = FVector2f;
-	
-	Point P0 { 0, 0 };
-	Point P1 { 0, 0 };
-	Point P2 { 1, 1 };
-	Point P3 { 1, 1 };
+
+	UPROPERTY(VisibleAnywhere) FVector2f P0 { 0, 0 };
+	UPROPERTY(VisibleAnywhere) FVector2f P1 { 0, 0 };
+	UPROPERTY(VisibleAnywhere) FVector2f P2 { 1, 1 };
+	UPROPERTY(VisibleAnywhere) FVector2f P3 { 1, 1 };
 
 	FCubicBezier() = default;
 	FCubicBezier(Point const& p0, Point const& p1, Point const& p2, Point const& p3)

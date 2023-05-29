@@ -11,7 +11,7 @@ auto ToString(FInputActionValue const& input) -> FString
 	switch (input.GetValueType()) {
 		case EInputActionValueType::Boolean:
 			return input.Get<bool>() ? "ON" : "OFF";
-		
+
 		case EInputActionValueType::Axis1D:
 			return FString::Printf(TEXT("%.3f"), input.Get<float>());
 
