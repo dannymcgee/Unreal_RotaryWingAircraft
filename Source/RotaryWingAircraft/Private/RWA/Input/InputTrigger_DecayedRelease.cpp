@@ -1,6 +1,6 @@
-﻿#include "RWA/InputTrigger_DecayedRelease.h"
+﻿#include "RWA/Input/InputTrigger_DecayedRelease.h"
 
-#include "Util.h"
+#include "RWA/Util.h"
 
 #define Self UInputTrigger_RWA_DecayedRelease
 

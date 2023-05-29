@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 
 struct FInputActionValue;
+struct FCubicBezier;
 
 
 namespace RWA::Util {
@@ -24,5 +25,6 @@ FORCEINLINE auto CurveSin(T alpha) -> T
 }
 
 auto ToString(FInputActionValue const& input) -> FString;
+auto ToString(FCubicBezier const& curve) -> FString;
 
 }

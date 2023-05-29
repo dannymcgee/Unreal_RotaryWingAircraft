@@ -1,5 +1,6 @@
 ﻿#include "RWA/Util.h"
 
+#include "RWA/Input/CubicBezier.h"
 #include "InputActionValue.h"
 
 
@@ -24,6 +25,16 @@ auto ToString(FInputActionValue const& input) -> FString
 		}
 	}
 	return "";
+}
+
+auto ToString(FCubicBezier const& curve) -> FString
+{
+	return FString::Printf(
+		TEXT("P0[ %.3f, %.3f ], P1[ %.3f, %.3f ], P2[ %.3f, %.3f ], P3[ %.3f, %.3f ]"),
+		curve.P0.X, curve.P0.Y,
+		curve.P1.X, curve.P1.Y,
+		curve.P2.X, curve.P2.Y,
+		curve.P3.X, curve.P3.Y);
 }
 
 }
