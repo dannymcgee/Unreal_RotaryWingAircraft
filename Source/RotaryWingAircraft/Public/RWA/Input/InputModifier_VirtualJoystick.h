@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "CoreMinimal.h"
 #include "InputModifiers.h"
@@ -25,7 +25,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Settings", meta=(
 		UIMin="1", ClampMin="1"))
 	float Resistance = 1.f;
-	
+
 	/**
 	 * How fast the value begins accelerating toward its target value, before
 	 * accounting for spring stiffness. You can think of this like a sensitivity
@@ -37,7 +37,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Settings", meta=(
 		UIMin="0", UIMax="1", ClampMin="0", ClampMax="1"))
 	float Impulse = 0.75f;
-	
+
 	/**
 	 * Emulates the stiffness of the joystick's "spring," providing greater
 	 * resistance to outward movement the further it is from rest, and increasing
@@ -45,7 +45,7 @@ public:
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Settings", meta=(
 		UIMin="0", UIMax="1", ClampMin="0", ClampMax="1"))
-	float SpringStifness = 0.75f;
+	float SpringStiffness = 0.75f;
 
 	/**
 	 * Weights the spring's stiffness to more prominently affect the inner or
@@ -91,7 +91,7 @@ protected:
 
 private:
 	void SetupCurves();
-	
+
 	auto ModifyRaw(float value, float deltaTime) -> FInputActionValue;
 	auto ModifyRaw(FVector2D value, float deltaTime) const -> FInputActionValue;
 	auto ModifyRaw(FVector value, float deltaTime) const -> FInputActionValue;
