@@ -2,6 +2,9 @@
 
 #include "CoreMinimal.h"
 
+struct FInputActionValue;
+
+
 namespace RWA::Util {
 
 template <typename T>
@@ -19,5 +22,7 @@ FORCEINLINE auto CurveSin(T alpha) -> T
 	if (alpha < 0.5) return -1.0 * FMath::Cos(alpha * UE_HALF_PI) + 1.0;
 	return FMath::Sin(alpha * UE_HALF_PI);
 }
+
+auto ToString(FInputActionValue const& input) -> FString;
 
 }

@@ -1,5 +1,7 @@
 ﻿#include "RWA/InputTrigger_DecayedRelease.h"
 
+#include "Util.h"
+
 #define Self UInputTrigger_RWA_DecayedRelease
 
 
@@ -18,23 +20,7 @@ auto Self::GetSupportedTriggerEvents() const -> ETriggerEventsSupported
 
 auto Self::GetDebugState() const -> FString
 {
-	switch (LastValue.GetValueType()) {
-		case EInputActionValueType::Boolean:
-			return LastValue.Get<bool>() ? "ON" : "OFF";
-		
-		case EInputActionValueType::Axis1D:
-			return FString::Printf(TEXT("%.3f"), LastValue.Get<float>());
-
-		case EInputActionValueType::Axis2D: {
-			auto value = LastValue.Get<FVector2D>();
-			return FString::Printf(TEXT("( %.3f, %.3f )"), value.X, value.Y);
-		}
-		case EInputActionValueType::Axis3D: {
-			auto value = LastValue.Get<FVector>();
-			return FString::Printf(TEXT("( %.3f, %.3f, %.3f )"), value.X, value.Y, value.Z);
-		}
-	}
-	return "";
+	return RWA::Util::ToString(LastValue);
 }
 
 auto Self::GetTriggerType_Implementation() const -> ETriggerType
@@ -48,10 +34,10 @@ auto Self::UpdateState_Implementation(
 	float dt)
 	-> ETriggerState
 {
-	if (GEngine)
-		GEngine->AddOnScreenDebugMessage((uint64)this, 0, FColor::White, GetDebugState());
-	
-	return ETriggerState::Triggered;
+	bool isDormant = FMath::IsNearlyZero(LastValue.GetMagnitudeSq())
+		&& FMath::IsNearlyZero(input.GetMagnitudeSq());
+
+	return isDormant ? ETriggerState::None : ETriggerState::Triggered;
 }
 
 

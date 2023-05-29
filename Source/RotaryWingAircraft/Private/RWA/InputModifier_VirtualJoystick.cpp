@@ -5,27 +5,6 @@
 #define Self UInputModifier_RWA_VirtualJoystick
 
 
-// FTickableGameObject interface -----------------------------------------------
-
-// TODO: Remove this interface implementation
-void Self::Tick(float dt)
-{
-	// UE_LOG(LogTemp, Log, TEXT("Tick: %f"), dt);
-}
-
-auto Self::IsTickable() const -> bool
-{
-	return m_ReadyToTick;
-}
-
-auto Self::GetStatId() const -> TStatId
-{
-	RETURN_QUICK_DECLARE_CYCLE_STAT(UInputModifier_RWA_VirtualJoystick, STATGROUP_Tickables);
-}
-
-
-// UInputModifier interface ----------------------------------------------------
-
 auto Self::ModifyRaw_Implementation(
 	UEnhancedPlayerInput const* input,
 	FInputActionValue value,
@@ -34,9 +13,6 @@ auto Self::ModifyRaw_Implementation(
 {
 	if (m_NeedsInit)
 		SetupCurves();
-
-	if (!m_ReadyToTick)
-		m_ReadyToTick = true;
 
 	FInputActionValue result;
 
@@ -58,7 +34,6 @@ auto Self::ModifyRaw_Implementation(
 	}
 
 	m_PrevInput = value;
-	m_PrevOutput = result;
 
 	return result;
 }
@@ -66,10 +41,6 @@ auto Self::ModifyRaw_Implementation(
 
 void Self::SetupCurves()
 {
-	if (DebugOutput) {
-		UE_LOG(LogTemp, Log, TEXT("-- INITIALIZING CURVES ------------------------"));
-	}
-	
 	auto setupCurve = [](FCubicBezier& curve, float scaleX, float slope, float easing, float balance)
 	{
 		auto p2_wgt1 = FVector2f{ (1.f - slope) * scaleX, 1 };
@@ -91,16 +62,6 @@ void Self::SetupCurves()
 
 	m_ActiveCurve = &m_CurveIn;
 	m_NeedsInit = false;
-
-	if (DebugOutput) {
-		UE_LOG(LogTemp, Log, TEXT("Resistance:     %.3f"), Resistance);
-		UE_LOG(LogTemp, Log, TEXT("Impulse:        %.3f"), Impulse);
-		UE_LOG(LogTemp, Log, TEXT("SpringStifness: %.3f"), SpringStifness);
-		UE_LOG(LogTemp, Log, TEXT("Damping:        %.3f"), Damping);
-
-		UE_LOG(LogTemp, Log, TEXT("m_CurveIn:  %s"), *m_CurveIn.ToString());
-		UE_LOG(LogTemp, Log, TEXT("m_CurveOut: %s"), *m_CurveOut.ToString());
-	}
 }
 
 auto Self::ModifyRaw(float value, float deltaTime) -> FInputActionValue
@@ -110,33 +71,16 @@ auto Self::ModifyRaw(float value, float deltaTime) -> FInputActionValue
 
 	// Have we changed direction this tick?
 	if (FMath::Abs(delta) > 0.5f) {
-		m_InputDuration = deltaTime;
 		m_Phase = FMath::IsNearlyZero(value) ? Falling : Rising;
-
-		if (DebugOutput)
-			if (m_Phase == Rising) {
-				UE_LOG(LogTemp, Log, TEXT("-- RISING -------------------------------"));
-			} else {
-				UE_LOG(LogTemp, Log, TEXT("-- FALLING ------------------------------"));
-			}
 
 		if (m_PrevCurve) {
 			Swap(m_PrevCurve, m_ActiveCurve);
-			if (DebugOutput) {
-				UE_LOG(LogTemp, Log, TEXT("Prev:          %.3f, %.3f"), m_PrevX, m_PrevY);
-			}
 			m_PrevX = m_ActiveCurve->XForY(1.f - m_PrevY);
-			if (DebugOutput) {
-				UE_LOG(LogTemp, Log, TEXT("Phase-flipped: %.3f, %.3f"), m_PrevX, 1.f - m_PrevY);
-			}
 		}
 		else {
 			m_PrevCurve = m_ActiveCurve;
 			m_ActiveCurve = m_Phase == Falling ? &m_CurveOut : &m_CurveIn;
 		}
-	}
-	else if (m_Phase != None) {
-		m_InputDuration += deltaTime;
 	}
 
 	if (m_Phase == None)
@@ -151,13 +95,8 @@ auto Self::ModifyRaw(float value, float deltaTime) -> FInputActionValue
 	m_PrevX = x;
 	m_PrevY = result;
 
-	if (DebugOutput) {
-		UE_LOG(LogTemp, Log, TEXT("[%.3f] -> %.3f"), x, result);
-	}
-
 	if (FMath::IsNearlyEqual(result, value)) {
 		m_Phase = None;
-		m_InputDuration = m_ActiveCurve->Duration();
 
 		return result;
 	}

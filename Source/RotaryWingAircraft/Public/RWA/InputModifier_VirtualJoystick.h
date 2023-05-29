@@ -26,6 +26,10 @@ public:
 		return P3.X - P0.X;
 	}
 
+	/**
+	 * Binary-search for the point along the curve where x ~= the provided value,
+	 * and return the corresponding y.
+	 */
 	FORCEINLINE auto YForX(float x) const -> float
 	{
 		int32 iterations = 1;
@@ -51,6 +55,10 @@ public:
 		return result.Y;
 	}
 
+	/**
+	 * Binary-search for the point along the curve where y ~= the provided value,
+	 * and return the corresponding x.
+	 */
 	FORCEINLINE auto XForY(float y) const -> float
 	{
 		int32 iterations = 1;
@@ -100,10 +108,7 @@ public:
  * stiffness and damping.
  */
 UCLASS(NotBlueprintable, MinimalAPI, meta=(DisplayName="RWA Virtual Joystick"))
-class UInputModifier_RWA_VirtualJoystick
-	: public UInputModifier
-	, public FTickableGameObject
-{
+class UInputModifier_RWA_VirtualJoystick : public UInputModifier {
 	GENERATED_BODY()
 
 public:
@@ -171,15 +176,6 @@ public:
 		UIMin="0", UIMax="1", ClampMin="-1", ClampMax="1"))
 	float Damping = 0.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Settings")
-	bool DebugOutput = false;
-	
-public:
-	// FTickableGameObject interface
-	void Tick(float dt) override;
-	auto IsTickable() const -> bool;
-	auto GetStatId() const -> TStatId;
-	
 protected:
 	// UInputModifier interface
 	auto ModifyRaw_Implementation(
@@ -204,25 +200,10 @@ private:
 	FCubicBezier const* m_PrevCurve = nullptr;
 
 	FInputActionValue m_PrevInput = 0;
-	FInputActionValue m_PrevOutput = 0;
-
-	/// Tracks the initial axis value we're currently moving from. This will be
-	/// something other than 0 or 1 when the user actuates the input for long
-	/// enough to move the axis, but not long enough to max (or bottom) it out
-	/// before pressing (or releasing) the button again..
-	FInputActionValue m_PeakOutput = 0;
-	
-	/// Tracks the initial Rising/Falling duration we're currently moving from.
-	/// See m_PeakOutput for an explanation.
-	float m_InitDuration = 0;
-	/// The total accumulated duration of the current Rising/Falling phase.
-	float m_InputDuration = 0;
-
 	float m_PrevX = 0;
 	float m_PrevY = 0;
 
 	EPhase m_Phase = None;
 
 	bool m_NeedsInit = true;
-	bool m_ReadyToTick = false;
 };
