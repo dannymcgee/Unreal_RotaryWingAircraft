@@ -71,8 +71,8 @@ void Self::SetupCurves()
 		curve.P3 = p3;
 	};
 
-	setupCurve(m_CurveIn, Resistance, Impulse, SpringStiffness, SpringBalance);
-	setupCurve(m_CurveOut, Resistance, SpringStiffness, Damping, 1.f - SpringBalance);
+	setupCurve(m_CurveIn, Resistance, Attack, SpringTension, SpringBalance);
+	setupCurve(m_CurveOut, Resistance, SpringTension, Damping, 1.f - SpringBalance);
 
 	m_ActiveCurve = &m_CurveIn;
 	m_NeedsInit = false;
@@ -127,7 +127,7 @@ auto Self::ModifyRaw(FVector2D value, float deltaTime) const -> FInputActionValu
 		return { value };
 
 	auto prev = m_PrevInput.Get<FVector2D>();
-	auto result = FMath::Vector2DInterpTo(prev, value, deltaTime, SpringStiffness);
+	auto result = FMath::Vector2DInterpTo(prev, value, deltaTime, SpringTension);
 	return { result };
 }
 
@@ -137,7 +137,7 @@ auto Self::ModifyRaw(FVector value, float deltaTime) const -> FInputActionValue
 		return { value };
 
 	auto prev = m_PrevInput.Get<FVector>();
-	auto result = FMath::VInterpTo(prev, value, deltaTime, SpringStiffness);
+	auto result = FMath::VInterpTo(prev, value, deltaTime, SpringTension);
 	return { result };
 }
 

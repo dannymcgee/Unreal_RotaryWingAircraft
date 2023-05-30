@@ -10,7 +10,7 @@
 /**
  * Modifies an analog axis controlled by digital button/key presses to allow
  * them to behave more like a physical analog input device, with configurable
- * stiffness and damping.
+ * tension and damping.
  */
 UCLASS(NotBlueprintable, MinimalAPI, meta=(DisplayName="RWA Virtual Joystick"))
 class UInputModifier_RWA_VirtualJoystick : public UInputModifier {
@@ -28,27 +28,27 @@ public:
 
 	/**
 	 * How fast the value begins accelerating toward its target value, before
-	 * accounting for spring stiffness. You can think of this like a sensitivity
+	 * accounting for spring tension. You can think of this like a sensitivity
 	 * factor.
 	 *
-	 * With Impulse=1 and SpringStiffness=0, the input moves immediately to the
+	 * With Attack=1 and SpringTension=0, the input moves immediately to the
 	 * target value, like a digital input.
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Settings", meta=(
 		UIMin="0", UIMax="1", ClampMin="0", ClampMax="1"))
-	float Impulse = 0.5f;
+	float Attack = 0.5f;
 
 	/**
-	 * Emulates the stiffness of the joystick's "spring," providing greater
+	 * Emulates the tension of the joystick's "spring," providing greater
 	 * resistance to outward movement the further it is from rest, and increasing
 	 * the speed at which it returns to rest once the input is released.
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Settings", meta=(
 		UIMin="0", UIMax="1", ClampMin="0", ClampMax="1"))
-	float SpringStiffness = 0.5f;
+	float SpringTension = 0.5f;
 
 	/**
-	 * Weights the spring's stiffness to more prominently affect the inner or
+	 * Weights the spring's tension to more prominently affect the inner or
 	 * outer range of the axis.
 	 *
 	 * This is pretty difficult to clearly summarize, so I'll try to describe
@@ -57,7 +57,7 @@ public:
 	 * * A value of 0.5 will "smooth" the overall shape of the curve by
 	 *   distributing the effect of the easing function over its entire length.
 	 * * A value of 1 means that the initial slope of the curve is constant
-	 *   (solely dependent on Impulse) and sharply decelerates to the target
+	 *   (solely dependent on Attack) and sharply decelerates to the target
 	 *   value toward the end of the range.
 	 * * A value of 0 will sharply increase the initial slope, but decelerate
 	 *   much more gradually while easing out to the target value.
