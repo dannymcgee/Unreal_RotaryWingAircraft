@@ -1,3 +1,46 @@
+# [2.1.0] - Input Improvements
+
+This update brings a couple of handy Input Modifiers and a new Input Trigger to make it easier to design intuitive control schemes for players with a limited number of analog axes (for example, mouse & keyboard users).
+
+## Input Modifiers
+### Virtual Joystick
+
+This modifier transforms inputs coming from digital button/key presses to emulate the feel of a springy analog joystick. Basically, inputs are mapped to outputs by following a cubic bezier curve, where the `x` parameter is the duration of the keypress, and the corresponding `y` value is the output.
+
+It comes with a set of tunable parameters to dial in exactly the feel you're looking for:
+
+- **Resistance** - Emulates a linear tension/friction on the joystick, modulating how quickly the output value reaches the target value. Higher values _increase_ the overall duration of the curve.
+- **Attack** - Modulates the initial slope of the curve, i.e. how quickly the output starts accelerating toward the target on the initial keypress. Higher values _decrease_ the overall duration of the curve.
+- **Spring Tension** - Applies additional resistance proportional to how far the current output is from the axis's resting/centered position. This has the effect of "easing out" movement from 0 to +/-1, and the opposite effect on movement back to 0 (increasing the initial acceleration towards 0 once the input is released).
+- **Spring Balance** - Distributes the "weight" of the curvature toward the leading (from 0) or trailing (to +/-1) edge of the curve. A value of 0.5 results in a smoother overall curve, meaning the change in acceleration is more gradual over its duration.
+- **Damping** - This is basically the counter to **Spring Tension**, having the effect of "easing out" the transition from +/-1 back to 0 once the input is released.
+
+The total impact of these parameters can be a little bit tricky to reason about (or explain!), so as a design aid, the modifier displays a small visual representation of the Rising (from 0 to +/-1) and Falling (from +/-1 to 0) curves that are produced by the chosen settings:
+
+![Input Modifier | Virtual Joystick](./Resources/InputModifier_VirtualJoystick_v2_1.png)
+
+### Virtual Throttle
+
+Similar to the Virtual Joystick modifier (but much simpler), the Virtual Throttle transforms digital button/key presses into simple linear motion along an analog axis. Unlike the Virtual Joystick, the Virtual Throttle is "sticky," meaning that when the input is released, the axis value stays put until it's told to move again. This one has much fewer (and again, simpler) parameters:
+
+- **Axis ID** - This is an unfortunate necessity due to a limitation of the APIs provided by Unreal (or perhaps the unorthodox way I'm trying to use them). This _must be provided_ or the modifier will not work (and you'll see an error in the Output Log). All Virtual Throttle modifiers that act upon a common axis (i.e., one key for pushing the axis up and another for pulling it down) must be set to use the same Axis ID, or else the two key-bindings will "fight" one another, leading to very unexpected results.
+- **Sensitivity** - Determines how quickly the axis value moves while the input is pressed.
+- **Detent** - Adds a subtle virtual [detent](https://reference.wolfram.com/applications/mechsystems/MultistageMechanisms/TimeSwitchingConstraints/HTMLImages/Mech.5.2.2.en/Mech.5.2.2.en_17.gif) around the 0 value of the axis, providing a smidge of extra resistance when first moving away from 0, and a tendency to settle back to 0 when the input is released within the detent's window. For example, if the detent is set to 0.05, and the throttle value is sitting at 4% when all throttle inputs are released, the throttle value will settle back to exactly 0% over a short duration.
+
+## Input Triggers
+
+### Decayed Release
+
+This is a (probably poorly named) Input Trigger that enables both of the Input Modifiers above. With the default triggers provided by the Enhanced Input plugin, all input values immediately cease to be sent once the bound key is released, and the input value returns to zero no matter what Input Modifiers are present. This is not great if you want to interpolate back to 0 over time when a key is released. This trigger enables our desired behavior by continuing to emit the "Triggered" event until both the raw input _and_ the modified output both reach zero.
+
+However, **do be warned** that this may have performance implications, as each instance of the Decayed Release trigger needs to tick every frame to determine what state it should emit. I didn't notice any difference in my own (informal) testing, but a comment in Epic's source code warns against using this option if it can be avoided, so I thought it was worth mentioning here as a disclaimer.
+
+## What's next for input?
+
+These modifiers are a good first step toward solid mouse & keyboard support, but the helicopter is frankly still pretty awkward to control (particularly the collective) even with these in place. The next step is to add an assist layer to the input in a (near) future update.
+
+The idea behind this is that players constrained by less-than-ideal input hardware (or a simple lack of dexterity) could enable a simplified control scheme that attempts to interpret the player's _intention_ (i.e., holding Shift because they want to gain altitude, or holding W because they want to move forward), and translates that to produce inputs for the simulation that will achieve that objective.
+
 # [2.0.0] - UMG HUD, C++ reorganization
 
 ## HUD
