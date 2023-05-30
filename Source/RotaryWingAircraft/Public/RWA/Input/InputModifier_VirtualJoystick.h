@@ -36,7 +36,7 @@ public:
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Settings", meta=(
 		UIMin="0", UIMax="1", ClampMin="0", ClampMax="1"))
-	float Impulse = 0.75f;
+	float Impulse = 0.5f;
 
 	/**
 	 * Emulates the stiffness of the joystick's "spring," providing greater
@@ -45,7 +45,7 @@ public:
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Settings", meta=(
 		UIMin="0", UIMax="1", ClampMin="0", ClampMax="1"))
-	float SpringStiffness = 0.75f;
+	float SpringStiffness = 0.5f;
 
 	/**
 	 * Weights the spring's stiffness to more prominently affect the inner or
@@ -71,7 +71,7 @@ public:
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Settings", meta=(
 		UIMin="0", UIMax="1", ClampMin="0", ClampMax="1"))
-	float SpringBalance = 1.f;
+	float SpringBalance = 0.5f;
 
 	/**
 	 * Provides a "cushion" that eases the rate of deceleration as the input
@@ -79,7 +79,7 @@ public:
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Settings", meta=(
 		UIMin="0", UIMax="1", ClampMin="-1", ClampMax="1"))
-	float Damping = 0.f;
+	float Damping = 0.5f;
 
 protected:
 	// UInputModifier interface
@@ -103,10 +103,12 @@ private:
 
 	enum EPhase { None, Rising, Falling };
 
-	UPROPERTY(VisibleAnywhere, DisplayName="Rising Curve (read-only)")
+	/** The function applied to the axis while pushing away from the resting position. */
+	UPROPERTY(VisibleAnywhere, DisplayName="Rising Curve")
 	FCubicBezier m_CurveIn;
 
-	UPROPERTY(VisibleAnywhere, DisplayName="Falling Curve (read-only)")
+	/** The function applied to the axis while easing back to the resting position. */
+	UPROPERTY(VisibleAnywhere, DisplayName="Falling Curve")
 	FCubicBezier m_CurveOut;
 
 	FCubicBezier const* m_ActiveCurve = nullptr;

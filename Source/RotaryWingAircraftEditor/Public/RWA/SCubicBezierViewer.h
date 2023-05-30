@@ -56,9 +56,11 @@ public:
 		const -> int32 override;
 
 private:
-	void UpdateMaterialParams(FCubicBezier const& curve) const;
+	void UpdateView(FCubicBezier const& curve) const;
 
 private:
+	mutable TWeakPtr<SBox,ESPMode::ThreadSafe> m_ChildContainer;
+
 	TAttribute<TOptional<FCubicBezier>> m_CubicBezier;
 	FCubicBezier m_PrevCubicBezier;
 

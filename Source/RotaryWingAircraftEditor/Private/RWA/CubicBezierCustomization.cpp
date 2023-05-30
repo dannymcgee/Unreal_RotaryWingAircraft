@@ -21,15 +21,34 @@ void Self::CustomizeHeader(
 
 	row.OverrideResetToDefault(FResetToDefaultOverride::Hide())
 		.NameContent()
+			.MaxDesiredWidth({})
 		[
-			propHandle->CreatePropertyNameWidget()
+			SNew(SHorizontalBox)
+			+SHorizontalBox::Slot()
+				.AutoWidth()
+				.Padding(0,0,8,0)
+			[
+				propHandle->CreatePropertyNameWidget()
+			]
+			+SHorizontalBox::Slot()
+				.AutoWidth()
+				.VAlign(VAlign_Center)
+			[
+				SNew(STextBlock)
+					.Font(FAppStyle::GetFontStyle(TEXT("PropertyWindow.NormalFont")))
+					.ColorAndOpacity(FColor{ 0xFF, 0xFF, 0xFF, 0x40 })
+					.Text(LOCTEXT("RWA_ReadOnly", "read-only"))
+			]
 		]
 		// TODO:
 		// Make this expandable instead of showing it in the value content slot
 		.ValueContent()
+			.MinDesiredWidth(0)
+			.MaxDesiredWidth({})
 		[
 			SNew(SCubicBezierViewer)
 				.CubicBezier(this, &Self::GetCurrentValue)
+				.ColorAndOpacity(FColor{ 0xFF, 0xFF, 0xFF, 0x14 })
 		];
 }
 

@@ -58,25 +58,27 @@ void Self::Construct(FArguments const& args)
 	auto* curveMat = m_RenderResources->DynamicMaterial();
 	m_ImageBrush.SetImageSize(FVector2D{ 256, 256 });
 	m_ImageBrush.SetResourceObject(curveMat);
-	UpdateMaterialParams(m_PrevCubicBezier);
 
 	// TODO:
 	// - Add synthetic "duration" field
 	// - Show individual point values
-	// - Adjust the color/opacity so that it blends in better with the editor UI
-	ChildSlot
+	auto child = SNew(SBox)
+		.Padding(8)
+		.WidthOverride(128)
+		.MinDesiredWidth(0)
+		.HeightOverride(64)
 	[
-		SNew(SBox)
-			.Padding(8)
-			.WidthOverride(128)
-			.HeightOverride(128)
-		[
-			SNew(SImage)
-				.DesiredSizeOverride(FVector2D{ 256, 256 })
-				.ColorAndOpacity(m_ColorAndOpacity)
-				.Image(&m_ImageBrush)
-		]
+		SNew(SImage)
+			.DesiredSizeOverride(FVector2D{ 256, 128 })
+			.ColorAndOpacity(m_ColorAndOpacity)
+			.Image(&m_ImageBrush)
 	];
+
+	m_ChildContainer = child;
+
+	ChildSlot [ child ];
+
+	UpdateView(m_PrevCubicBezier);
 }
 
 auto Self::OnPaint(
@@ -91,15 +93,20 @@ auto Self::OnPaint(
 {
 	if (auto const& cubicBezier = m_CubicBezier.Get())
 		if (!FCubicBezier::IsNearlyEqual(*cubicBezier, m_PrevCubicBezier))
-			UpdateMaterialParams(*cubicBezier);
+			UpdateView(*cubicBezier);
 
 	return Super::OnPaint(args, geo, rect, elements, layer, style, parentEnabled);
 }
 
-void Self::UpdateMaterialParams(FCubicBezier const& curve) const
+void Self::UpdateView(FCubicBezier const& curve) const
 {
 	auto const& [p0, p1, p2, p3] = curve;
 	auto* curveMat = m_RenderResources->DynamicMaterial();
+
+	if (m_ChildContainer.IsValid()) {
+		auto box = m_ChildContainer.Pin();
+		box->SetWidthOverride(128 * curve.Duration());
+	}
 
 	curveMat->SetVectorParameterValue("P0-P1", FVector4f{ p0.X, p0.Y, p1.X, p1.Y });
 	curveMat->SetVectorParameterValue("P2-P3", FVector4f{ p2.X, p2.Y, p3.X, p3.Y });
