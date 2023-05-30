@@ -7,6 +7,8 @@ public class RotaryWingAircraftEditor : ModuleRules {
 		PublicDependencyModuleNames.AddRange(new [] {
 			"AnimGraph",
 			"Core",
+			"Projects",
+			"RenderCore",
 			"RotaryWingAircraft",
 		});
 
@@ -15,6 +17,8 @@ public class RotaryWingAircraftEditor : ModuleRules {
 			"CoreUObject",
 			"Engine",
 			"UnrealEd",
+			"Slate",
+			"SlateCore",
 		});
 	}
 }
