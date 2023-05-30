@@ -21,6 +21,14 @@ public:
 		: P0(p0), P1(p1), P2(p2), P3(p3)
 	{}
 
+	FORCEINLINE static auto IsNearlyEqual(FCubicBezier const& lhs, FCubicBezier const& rhs) -> bool
+	{
+		return FMath::IsNearlyEqual(lhs.P0.X, rhs.P0.X) && FMath::IsNearlyEqual(lhs.P0.Y, rhs.P0.Y)
+			&& FMath::IsNearlyEqual(lhs.P1.X, rhs.P1.X) && FMath::IsNearlyEqual(lhs.P1.Y, rhs.P1.Y)
+			&& FMath::IsNearlyEqual(lhs.P2.X, rhs.P2.X) && FMath::IsNearlyEqual(lhs.P2.Y, rhs.P2.Y)
+			&& FMath::IsNearlyEqual(lhs.P3.X, rhs.P3.X) && FMath::IsNearlyEqual(lhs.P3.Y, rhs.P3.Y);
+	}
+
 	FORCEINLINE auto Duration() const -> float
 	{
 		return P3.X - P0.X;

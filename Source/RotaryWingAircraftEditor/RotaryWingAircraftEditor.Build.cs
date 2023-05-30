@@ -7,6 +7,8 @@ public class RotaryWingAircraftEditor : ModuleRules {
 		PublicDependencyModuleNames.AddRange(new [] {
 			"AnimGraph",
 			"Core",
+			"Projects",
+			"RenderCore",
 			"RotaryWingAircraft",
 		});
 

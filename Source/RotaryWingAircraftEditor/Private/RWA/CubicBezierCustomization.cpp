@@ -1,6 +1,7 @@
 ﻿#include "RWA/CubicBezierCustomization.h"
 
 #include "DetailWidgetRow.h"
+#include "RWA/SCubicBezierViewer.h"
 
 #define LOCTEXT_NAMESPACE "RotaryWingAircraftEditor"
 #define Self FCubicBezierStructCustomization
@@ -18,25 +19,17 @@ void Self::CustomizeHeader(
 {
 	m_Handle = propHandle;
 
-	auto value = GetCurrentValue();
-	auto text = value
-		? FText::FromString(FString::Printf(
-				TEXT("P0[ %.3f, %.3f ], P1[ %.3f, %.3f ], P2[ %.3f, %.3f ], P3[ %.3f, %.3f ]"),
-				value->P0.X, value->P0.Y,
-				value->P1.X, value->P1.Y,
-				value->P2.X, value->P2.Y,
-				value->P3.X, value->P3.Y))
-		: LOCTEXT("CubicBezier_NoneValue", "None");
-
 	row.OverrideResetToDefault(FResetToDefaultOverride::Hide())
 		.NameContent()
 		[
 			propHandle->CreatePropertyNameWidget()
 		]
+		// TODO:
+		// Make this expandable instead of showing it in the value content slot
 		.ValueContent()
 		[
-			SNew(STextBlock)
-			.Text(text)
+			SNew(SCubicBezierViewer)
+				.CubicBezier(this, &Self::GetCurrentValue)
 		];
 }
 
@@ -48,8 +41,7 @@ auto Self::GetCurrentValue() const -> TOptional<FCubicBezier>
 	if (structPtrs.Num() == 0)
 		return {};
 
-	auto* result = (FCubicBezier*)structPtrs[0];
-	if (result)
+	if (auto* result = (FCubicBezier*)structPtrs[0])
 		return *result;
 
 	return {};
