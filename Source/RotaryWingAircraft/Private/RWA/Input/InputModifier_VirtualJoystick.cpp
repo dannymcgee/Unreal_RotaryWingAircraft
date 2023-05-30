@@ -1,7 +1,6 @@
 ﻿#include "RWA/Input/InputModifier_VirtualJoystick.h"
 
 #include "EnhancedPlayerInput.h"
-#include "RWA/Util.h"
 
 #define Self UInputModifier_RWA_VirtualJoystick
 
@@ -43,20 +42,20 @@ void Self::PostEditChangeProperty(FPropertyChangedEvent& event)
 {
 	Super::PostEditChangeProperty(event);
 	SetupCurves();
-	Temp_PrintPropValues("PostEditChangeProperty");
 }
 
 void Self::PostLoad()
 {
 	Super::PostLoad();
 	SetupCurves();
-	Temp_PrintPropValues("PostLoad");
 }
 
 
 void Self::SetupCurves()
 {
-	auto setupCurve = [](FCubicBezier& curve, float scaleX, float slope, float easing, float balance)
+	auto setupCurve = [](
+		FCubicBezier& curve,
+		float scaleX, float slope, float easing, float balance)
 	{
 		auto p2_wgt1 = FVector2f{ (1.f - slope) * scaleX, 1 };
 		auto p3 = FVector2f{ p2_wgt1.X + (easing * scaleX), 1 };
@@ -140,23 +139,6 @@ auto Self::ModifyRaw(FVector value, float deltaTime) const -> FInputActionValue
 	auto prev = m_PrevInput.Get<FVector>();
 	auto result = FMath::VInterpTo(prev, value, deltaTime, SpringStiffness);
 	return { result };
-}
-
-void Self::Temp_PrintPropValues(FString const& header) const
-{
-	if (!header.IsEmpty()) {
-		auto fill = FString::ChrN(36 - header.Len(), '-');
-		UE_LOG(LogTemp, Log, TEXT("-- %s %s"), *header, *fill);
-	}
-
-	UE_LOG(LogTemp, Log, TEXT("Resistance:      %.3f"), Resistance);
-	UE_LOG(LogTemp, Log, TEXT("Impulse:         %.3f"), Impulse);
-	UE_LOG(LogTemp, Log, TEXT("SpringStiffness: %.3f"), SpringStiffness);
-	UE_LOG(LogTemp, Log, TEXT("SpringBalance:   %.3f"), SpringBalance);
-	UE_LOG(LogTemp, Log, TEXT("Damping:         %.3f"), Damping);
-
-	UE_LOG(LogTemp, Log, TEXT("Rising Curve:    %s"), *RWA::Util::ToString(m_CurveIn));
-	UE_LOG(LogTemp, Log, TEXT("Falling Curve:   %s"), *RWA::Util::ToString(m_CurveOut));
 }
 
 

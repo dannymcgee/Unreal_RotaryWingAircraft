@@ -101,8 +101,6 @@ private:
 	auto ModifyRaw(FVector2D value, float deltaTime) const -> FInputActionValue;
 	auto ModifyRaw(FVector value, float deltaTime) const -> FInputActionValue;
 
-	void Temp_PrintPropValues(FString const& header = "") const;
-
 	enum EPhase { None, Rising, Falling };
 
 	UPROPERTY(VisibleAnywhere, DisplayName="Rising Curve (read-only)")
