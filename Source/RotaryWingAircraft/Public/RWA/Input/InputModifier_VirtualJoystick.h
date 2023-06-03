@@ -89,9 +89,11 @@ protected:
 		float deltaTime)
 		-> FInputActionValue override;
 
-	// UObject interface
 public:
+	// UObject interface
+#if WITH_EDITOR
 	void PostEditChangeProperty(FPropertyChangedEvent& event) override;
+#endif
 	void PostLoad() override;
 
 private:

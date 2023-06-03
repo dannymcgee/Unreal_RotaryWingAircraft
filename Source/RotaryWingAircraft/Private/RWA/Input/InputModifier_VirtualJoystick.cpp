@@ -38,11 +38,13 @@ auto Self::ModifyRaw_Implementation(
 	return result;
 }
 
+#if WITH_EDITOR
 void Self::PostEditChangeProperty(FPropertyChangedEvent& event)
 {
 	Super::PostEditChangeProperty(event);
 	SetupCurves();
 }
+#endif
 
 void Self::PostLoad()
 {

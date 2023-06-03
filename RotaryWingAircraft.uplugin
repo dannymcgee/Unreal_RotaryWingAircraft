@@ -1,7 +1,7 @@
 ﻿{
 	"FileVersion": 3,
-	"Version": 3,
-	"VersionName": "2.1",
+	"Version": 4,
+	"VersionName": "2.1.1",
 	"FriendlyName": "Rotary-Wing Aircraft",
 	"Description": "Helicopters for Unreal Engine",
 	"Category": "Gameplay",

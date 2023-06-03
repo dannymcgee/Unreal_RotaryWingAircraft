@@ -27,8 +27,8 @@ public:
 
 	/** Controls how quickly the axis values moves when applying input. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Settings", meta=(
-		UIMin="0", UIMax="1", ClampMin="0.0001", ClampMax="1"))
-	float Sensitivity = 0.01f;
+		UIMin="0", UIMax="1", ClampMin="0.01", ClampMax="1"))
+	float Sensitivity = 0.6f;
 
 	/**
 	 * Allows axis values that are close to zero to settle back to exactly zero
