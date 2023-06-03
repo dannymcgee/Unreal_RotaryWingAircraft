@@ -1,3 +1,10 @@
+# [2.1.1] - Bug fixes
+
+* Fixed an issue that prevented the game from being packaged
+* Fixed a framerate-independence issue in the Virtual Throttle input modifier
+* <details><summary>Fixed some issues with the HUD appearance when the game is running outside of a PIE viewport</summary>
+  Previously, the Viewport Scale was being set once, when the SampleHeli was first possessed by a player or spectator. A timing difference between the PIE viewport vs independent windows (like a packaged game) caused the resulting viewport scale to be incorrect for the latter.</details>
+
 # [2.1.0] - Input Improvements
 
 This update brings a couple of handy Input Modifiers and a new Input Trigger to make it easier to design intuitive control schemes for players with a limited number of analog axes (for example, mouse & keyboard users).
