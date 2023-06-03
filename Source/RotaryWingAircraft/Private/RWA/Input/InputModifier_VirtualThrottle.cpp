@@ -20,7 +20,7 @@ auto Self::ModifyRaw_Implementation(
 	auto& current = s_AxisValues.FindOrAdd(AxisID, {});
 
 	if (value.IsNonZero()) {
-		auto next = current + (value * Sensitivity);
+		auto next = current + (value * Sensitivity * deltaTime);
 
 		// Clamp to a max-length of 1
 		float mag2 = next.GetMagnitudeSq();
@@ -37,7 +37,7 @@ auto Self::ModifyRaw_Implementation(
 	{
 		auto currentValue = current.Get<float>();
 		if (FMath::Abs(currentValue) <= Detent) {
-			current = currentValue + (-FMath::Sign(currentValue) * Sensitivity * 0.25f);
+			current = currentValue + (-FMath::Sign(currentValue) * Sensitivity * deltaTime * 0.25f);
 
 			return current;
 		}
