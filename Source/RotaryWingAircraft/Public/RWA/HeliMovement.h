@@ -68,14 +68,14 @@ public:
 	 * Y-Axis: Main rotor effectiveness (0-1)
 	 */
 	UPROPERTY(EditDefaultsOnly, Category="VehicleSetup")
-	UCurveFloat* AltitudePenaltyCurve;
+	TObjectPtr<UCurveFloat> AltitudePenaltyCurve;
 
 	/**
 	 * X-Axis: Angle of Attack (degrees)
 	 * Y-Axis: Drag Coefficient
 	 */
 	UPROPERTY(EditDefaultsOnly, Category="VehicleSetup")
-	UCurveFloat* DragCoefficientCurve;
+	TObjectPtr<UCurveFloat> DragCoefficientCurve;
 
 	/**
 	 * When the aircraft is traveling at moderate airspeeds, the aerodynamic
@@ -89,7 +89,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category="VehicleSetup",
 		DisplayName="Aerodynamic Torque Influence"
 	)
-	UCurveFloat* AeroTorqueInfluence;
+	TObjectPtr<UCurveFloat> AeroTorqueInfluence;
 
 	UPROPERTY(EditAnywhere, Category="Vehicle")
 	bool DebugPhysics = false;

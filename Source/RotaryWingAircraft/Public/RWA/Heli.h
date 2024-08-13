@@ -20,7 +20,7 @@ class ROTARYWINGAIRCRAFT_API ARWA_Heli : public APawn {
 
 public:
 
-	ARWA_Heli();
+	ARWA_Heli(FObjectInitializer const& init);
 
 	void SetupPlayerInputComponent(UInputComponent* inputCmp) override;
 
@@ -58,16 +58,16 @@ public:
 protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
-	UInputMappingContext* DefaultMappingContext;
+	TObjectPtr<UInputMappingContext> DefaultMappingContext;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
-	UInputAction* CyclicAction;
+	TObjectPtr<UInputAction> CyclicAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
-	UInputAction* CollectiveAction;
+	TObjectPtr<UInputAction> CollectiveAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input", DisplayName="Anti-Torque Action")
-	UInputAction* AntiTorqueAction;
+	TObjectPtr<UInputAction> AntiTorqueAction;
 
 	void BeginPlay() override;
 
@@ -77,10 +77,10 @@ protected:
 private:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintGetter="GetMesh", Category="Vehicle", DisplayName="Mesh")
-	USkeletalMeshComponent* m_Mesh;
+	TObjectPtr<USkeletalMeshComponent> m_Mesh;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintGetter="GetVehicleMovement", Category="Vehicle", DisplayName="Vehicle Movement")
-	URWA_HeliMovementComponent* m_VehicleMovement;
+	TObjectPtr<URWA_HeliMovementComponent> m_VehicleMovement;
 
 	auto InitSkelMesh() -> USkeletalMeshComponent*;
 	auto InitVehicleMovement(USkeletalMeshComponent* mesh) -> URWA_HeliMovementComponent*;

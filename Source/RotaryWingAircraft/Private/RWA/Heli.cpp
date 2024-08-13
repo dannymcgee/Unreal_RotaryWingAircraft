@@ -14,7 +14,8 @@ DEFINE_LOG_CATEGORY(LogHeli)
 
 // Initialization --------------------------------------------------------------
 
-Self::ARWA_Heli() : Super()
+Self::ARWA_Heli(FObjectInitializer const& init)
+	: Super(init)
 {
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
