@@ -13,8 +13,8 @@ class FRenderResources
 public:
 	FRenderResources() = default;
 
-	auto DynamicMaterial() -> UMaterialInstanceDynamic*;
-	auto GetReferencerName() const -> FString override;
+	UMaterialInstanceDynamic* DynamicMaterial();
+	FString GetReferencerName() const override;
 	void AddReferencedObjects(FReferenceCollector& gc) override;
 
 private:

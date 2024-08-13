@@ -4,11 +4,10 @@
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Kismet2/CompilerResultsLog.h"
 
-#define Self UAnimGraphNode_RWA_RotorController
 #define LOCTEXT_NAMESPACE "A3Nodes"
 
 
-auto Self::GetNodeTitle(ENodeTitleType::Type type) const -> FText
+FText UAnimGraphNode_RWA_RotorController::GetNodeTitle(ENodeTitleType::Type type) const
 {
 	if (type == ENodeTitleType::ListView || type == ENodeTitleType::MenuTitle)
 		return GetControllerDescription();
@@ -16,7 +15,7 @@ auto Self::GetNodeTitle(ENodeTitleType::Type type) const -> FText
 	return LOCTEXT("AnimGraphNode_RWA_RotorController", "Rotor Controller");
 }
 
-auto Self::GetTooltipText() const -> FText
+FText UAnimGraphNode_RWA_RotorController::GetTooltipText() const
 {
 	return LOCTEXT(
 		"AnimGraphNode_RWA_RotorController_Tooltip",
@@ -25,9 +24,9 @@ auto Self::GetTooltipText() const -> FText
 	);
 }
 
-auto Self::IsCompatibleWithGraph(UEdGraph const* graph) const -> bool
+bool UAnimGraphNode_RWA_RotorController::IsCompatibleWithGraph(UEdGraph const* graph) const
 {
-	auto* bp = FBlueprintEditorUtils::FindBlueprintForGraph(graph);
+	UBlueprint* bp = FBlueprintEditorUtils::FindBlueprintForGraph(graph);
 	return (
 		bp != nullptr
 		&& bp->ParentClass->IsChildOf<URWA_HeliAnimInstance>()
@@ -35,7 +34,7 @@ auto Self::IsCompatibleWithGraph(UEdGraph const* graph) const -> bool
 	);
 }
 
-void Self::ValidateAnimNodePostCompile(
+void UAnimGraphNode_RWA_RotorController::ValidateAnimNodePostCompile(
 	FCompilerResultsLog& msgLog,
 	UAnimBlueprintGeneratedClass* compiledClass,
 	int32 compiledNodeIdx)
@@ -48,7 +47,7 @@ void Self::ValidateAnimNodePostCompile(
 		);
 }
 
-auto Self::GetControllerDescription() const -> FText
+FText UAnimGraphNode_RWA_RotorController::GetControllerDescription() const
 {
 	return LOCTEXT(
 		"AnimGraphNode_RWA_RotorController",
@@ -56,11 +55,10 @@ auto Self::GetControllerDescription() const -> FText
 	);
 }
 
-auto Self::GetNode() const -> FAnimNode_SkeletalControlBase const*
+FAnimNode_SkeletalControlBase const* UAnimGraphNode_RWA_RotorController::GetNode() const
 {
 	return &m_Node;
 }
 
 
 #undef LOCTEXT_NAMESPACE
-#undef Self

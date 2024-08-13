@@ -9,7 +9,7 @@ class ROTARYWINGAIRCRAFTEDITOR_API FCubicBezierStructCustomization
 	: public IPropertyTypeCustomization
 {
 public:
-	static auto MakeInstance() -> TSharedRef<IPropertyTypeCustomization>;
+	static TSharedRef<IPropertyTypeCustomization> MakeInstance();
 
 	void CustomizeHeader(
 		TSharedRef<IPropertyHandle> propHandle,
@@ -24,10 +24,10 @@ public:
 		override
 	{}
 
-	auto ShouldInlineKey() const -> bool override { return true; }
+	bool ShouldInlineKey() const override { return true; }
 
 private:
-	auto GetCurrentValue() const -> TOptional<FCubicBezier>;
+	TOptional<FCubicBezier> GetCurrentValue() const;
 
 private:
 	TSharedPtr<IPropertyHandle> m_Handle;
