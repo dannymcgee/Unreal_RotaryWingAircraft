@@ -13,7 +13,8 @@
  * tension and damping.
  */
 UCLASS(NotBlueprintable, MinimalAPI, meta=(DisplayName="RWA Virtual Joystick"))
-class UInputModifier_RWA_VirtualJoystick : public UInputModifier {
+class UInputModifier_RWA_VirtualJoystick : public UInputModifier
+{
 	GENERATED_BODY()
 
 public:
@@ -83,11 +84,11 @@ public:
 
 protected:
 	// UInputModifier interface
-	auto ModifyRaw_Implementation(
+	FInputActionValue ModifyRaw_Implementation(
 		UEnhancedPlayerInput const* input,
 		FInputActionValue value,
 		float deltaTime)
-		-> FInputActionValue override;
+		override;
 
 public:
 	// UObject interface
@@ -99,9 +100,9 @@ public:
 private:
 	void SetupCurves();
 
-	auto ModifyRaw(float value, float deltaTime) -> FInputActionValue;
-	auto ModifyRaw(FVector2D value, float deltaTime) const -> FInputActionValue;
-	auto ModifyRaw(FVector value, float deltaTime) const -> FInputActionValue;
+	FInputActionValue ModifyRaw(float value, float deltaTime);
+	FInputActionValue ModifyRaw(FVector2D value, float deltaTime) const;
+	FInputActionValue ModifyRaw(FVector value, float deltaTime) const;
 
 	enum EPhase { None, Rising, Falling };
 

@@ -14,9 +14,12 @@ class UInputMappingContext;
 
 
 UCLASS(Blueprintable)
-class ROTARYWINGAIRCRAFT_API ARWA_Heli : public APawn {
+class ROTARYWINGAIRCRAFT_API ARWA_Heli
+	: public APawn
+{
 	GENERATED_BODY()
 
+	using Self = ARWA_Heli;
 
 public:
 
@@ -30,7 +33,7 @@ public:
 	UFUNCTION(BlueprintGetter)
 	URWA_HeliMovementComponent* GetVehicleMovement() const;
 
-	auto GetMovementComponent() const -> UPawnMovementComponent* override;
+	UPawnMovementComponent* GetMovementComponent() const override;
 
 	/**
 	 * Adds the vehicle's input mapping context to the current player. If the
@@ -71,7 +74,7 @@ protected:
 
 	void BeginPlay() override;
 
-	virtual auto GetInputSubsystem() const -> IEnhancedInputSubsystemInterface*;
+	virtual IEnhancedInputSubsystemInterface* GetInputSubsystem() const;
 
 
 private:
@@ -82,8 +85,8 @@ private:
 	UPROPERTY(EditDefaultsOnly, BlueprintGetter="GetVehicleMovement", Category="Vehicle", DisplayName="Vehicle Movement")
 	TObjectPtr<URWA_HeliMovementComponent> m_VehicleMovement;
 
-	auto InitSkelMesh() -> USkeletalMeshComponent*;
-	auto InitVehicleMovement(USkeletalMeshComponent* mesh) -> URWA_HeliMovementComponent*;
+	USkeletalMeshComponent* InitSkelMesh();
+	URWA_HeliMovementComponent* InitVehicleMovement(USkeletalMeshComponent* mesh);
 
 	void OnCyclic(FInputActionValue const& value);
 	void OnCollective(FInputActionValue const& value);

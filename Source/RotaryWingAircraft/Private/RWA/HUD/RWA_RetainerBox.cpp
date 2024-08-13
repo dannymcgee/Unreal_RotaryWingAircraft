@@ -3,20 +3,20 @@
 #include "RWA/HUD/SRetainerWidget.h"
 
 #define LOCTEXT_NAMESPACE "RWA"
-#define Self URWA_RetainerBox
+
 
 namespace {
 static FName g_DefaultTextureParamName = "Texture";
 }
 
-Self::URWA_RetainerBox(FObjectInitializer const& init)
+URWA_RetainerBox::URWA_RetainerBox(FObjectInitializer const& init)
 	: Super(init)
 	, TextureParameter(g_DefaultTextureParamName)
 {
 	SetVisibilityInternal(ESlateVisibility::Visible);
 }
 
-void Self::SetRetainedRendering(bool value)
+void URWA_RetainerBox::SetRetainedRendering(bool value)
 {
 	RetainedRendering = value;
 
@@ -24,7 +24,7 @@ void Self::SetRetainedRendering(bool value)
 		m_Widget->SetRetainedRendering(value);
 }
 
-void Self::SetRenderingPhase(int32 phase, int32 phaseCount)
+void URWA_RetainerBox::SetRenderingPhase(int32 phase, int32 phaseCount)
 {
 	Phase = phase;
 	PhaseCount = FMath::Max(phaseCount, 1);
@@ -33,13 +33,13 @@ void Self::SetRenderingPhase(int32 phase, int32 phaseCount)
 		m_Widget->SetRenderingPhase(Phase, PhaseCount);
 }
 
-void Self::RequestRender()
+void URWA_RetainerBox::RequestRender()
 {
 	if (m_Widget.IsValid())
 		m_Widget->RequestRender();
 }
 
-auto Self::GetEffectMaterial() const -> UMaterialInstanceDynamic*
+UMaterialInstanceDynamic* URWA_RetainerBox::GetEffectMaterial() const
 {
 	if (m_Widget.IsValid())
 		return m_Widget->GetEffectMaterial();
@@ -47,7 +47,7 @@ auto Self::GetEffectMaterial() const -> UMaterialInstanceDynamic*
 	return nullptr;
 }
 
-void Self::SetEffectMaterial(UMaterialInterface* value)
+void URWA_RetainerBox::SetEffectMaterial(UMaterialInterface* value)
 {
 	EffectMaterial = value;
 
@@ -55,7 +55,7 @@ void Self::SetEffectMaterial(UMaterialInterface* value)
 		m_Widget->SetEffectMaterial(value);
 }
 
-void Self::SetTextureParameter(FName value)
+void URWA_RetainerBox::SetTextureParameter(FName value)
 {
 	TextureParameter = value;
 
@@ -63,14 +63,14 @@ void Self::SetTextureParameter(FName value)
 		m_Widget->SetTextureParameter(value);
 }
 
-void Self::ReleaseSlateResources(bool releaseChildren)
+void URWA_RetainerBox::ReleaseSlateResources(bool releaseChildren)
 {
 	Super::ReleaseSlateResources(releaseChildren);
 	
 	m_Widget.Reset();
 }
 
-auto Self::RebuildWidget() -> TSharedRef<SWidget>
+TSharedRef<SWidget> URWA_RetainerBox::RebuildWidget() 
 {
 	m_Widget = SNew(SRWA_RetainerWidget)
 		.RenderOnInvalidation(RenderOnInvalidation)
@@ -84,8 +84,9 @@ auto Self::RebuildWidget() -> TSharedRef<SWidget>
 #endif
 		;
 
-	if (GetChildrenCount() > 0) {
-		auto content = GetContentSlot()->Content
+	if (GetChildrenCount() > 0)
+	{
+		TSharedRef<SWidget> content = GetContentSlot()->Content
 			? GetContentSlot()->Content->TakeWidget()
 			: SNullWidget::NullWidget;
 		
@@ -95,7 +96,7 @@ auto Self::RebuildWidget() -> TSharedRef<SWidget>
 	return m_Widget.ToSharedRef();
 }
 
-void Self::SynchronizeProperties()
+void URWA_RetainerBox::SynchronizeProperties()
 {
 	Super::SynchronizeProperties();
 
@@ -105,32 +106,32 @@ void Self::SynchronizeProperties()
 	m_Widget->SetWorld(GetWorld());
 }
 
-void Self::OnSlotAdded(UPanelSlot* slot)
+void URWA_RetainerBox::OnSlotAdded(UPanelSlot* slot)
 {
 	if (!m_Widget.IsValid())
 		return;
 
-	auto content = slot->Content
+	TSharedRef<SWidget> content = slot->Content
 		? slot->Content->TakeWidget()
 		: SNullWidget::NullWidget;
 	
 	m_Widget->SetContent(content);
 }
 
-void Self::OnSlotRemoved(UPanelSlot* slot)
+void URWA_RetainerBox::OnSlotRemoved(UPanelSlot* slot)
 {
 	if (m_Widget.IsValid())
 		m_Widget->SetContent(SNullWidget::NullWidget);
 }
 
 #if WITH_EDITOR
-auto Self::GetPaletteCategory() -> FText const
+FText const URWA_RetainerBox::GetPaletteCategory()
 {
 	return LOCTEXT("RotaryWingAircraft", "Rotary-Wing Aircraft");
 }
 #endif
 
-auto Self::GetCachedAllottedGeometry() const -> FGeometry
+FGeometry URWA_RetainerBox::GetCachedAllottedGeometry() const
 {
 	if (m_Widget.IsValid())
 		return m_Widget->GetTickSpaceGeometry();
@@ -140,14 +141,14 @@ auto Self::GetCachedAllottedGeometry() const -> FGeometry
 }
 
 #if WITH_EDITOR
-auto Self::CanEditChange(FProperty const* property) const -> bool
+bool URWA_RetainerBox::CanEditChange(FProperty const* property) const
 {
 	if (!Super::CanEditChange(property))
 		return false;
 
-	auto propName = property->GetFName(); 
-	if (propName == GET_MEMBER_NAME_CHECKED(Self, Phase)
-		|| propName == GET_MEMBER_NAME_CHECKED(Self, PhaseCount))
+	FName propName = property->GetFName(); 
+	if (propName == GET_MEMBER_NAME_CHECKED(URWA_RetainerBox, Phase)
+		|| propName == GET_MEMBER_NAME_CHECKED(URWA_RetainerBox, PhaseCount))
 	{
 		return RenderOnPhase && RetainedRendering;
 	}
@@ -157,5 +158,4 @@ auto Self::CanEditChange(FProperty const* property) const -> bool
 #endif
 
 
-#undef Self
 #undef LOCTEXT_NAMESPACE

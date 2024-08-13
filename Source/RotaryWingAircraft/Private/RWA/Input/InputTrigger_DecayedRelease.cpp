@@ -2,43 +2,37 @@
 
 #include "RWA/Util.h"
 
-#define Self UInputTrigger_RWA_DecayedRelease
 
-
-Self::Self(FObjectInitializer const& init)
+UInputTrigger_RWA_DecayedRelease::UInputTrigger_RWA_DecayedRelease(FObjectInitializer const& init)
 	: Super(init)
 {
 	ActuationThreshold = 0.f;
 	bShouldAlwaysTick = true;
 }
 
-auto Self::GetSupportedTriggerEvents() const -> ETriggerEventsSupported
+ETriggerEventsSupported UInputTrigger_RWA_DecayedRelease::GetSupportedTriggerEvents() const 
 {
 	// Includes ETriggerEvents of Started, Ongoing, Canceled, and Triggered
 	return ETriggerEventsSupported::Ongoing;
 }
 
-auto Self::GetDebugState() const -> FString
+FString UInputTrigger_RWA_DecayedRelease::GetDebugState() const
 {
 	return RWA::Util::ToString(LastValue);
 }
 
-auto Self::GetTriggerType_Implementation() const -> ETriggerType
+ETriggerType UInputTrigger_RWA_DecayedRelease::GetTriggerType_Implementation() const 
 {
 	return ETriggerType::Implicit;
 }
 
-auto Self::UpdateState_Implementation(
+ETriggerState UInputTrigger_RWA_DecayedRelease::UpdateState_Implementation(
 	UEnhancedPlayerInput const* cmp,
 	FInputActionValue input,
 	float dt)
-	-> ETriggerState
 {
 	bool isDormant = FMath::IsNearlyZero(LastValue.GetMagnitudeSq())
 		&& FMath::IsNearlyZero(input.GetMagnitudeSq());
 
 	return isDormant ? ETriggerState::None : ETriggerState::Triggered;
 }
-
-
-#undef Self

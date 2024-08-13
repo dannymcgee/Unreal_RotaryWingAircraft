@@ -51,16 +51,16 @@ public:
 	void SetTextureParameter(FName value);
 	void SetWorld(UWorld* value);
 
-	auto GetEffectMaterial() const -> UMaterialInstanceDynamic*;
+	UMaterialInstanceDynamic* GetEffectMaterial() const;
 	void SetEffectMaterial(UMaterialInterface* value);
 
-	auto GetChildren() -> FChildren* override;
+	FChildren* GetChildren() override;
 #if WITH_SLATE_DEBUGGING
-	auto Debug_GetChildrenForReflector() -> FChildren* override;
+	FChildren* Debug_GetChildrenForReflector() override;
 #endif
 
 protected:
-	auto OnPaint(
+	int32 OnPaint(
 		FPaintArgs const& args,
 		FGeometry const& geo,
 		FSlateRect const& cullingRect,
@@ -68,38 +68,38 @@ protected:
 		int32 layerId,
 		FWidgetStyle const& style,
 		bool parentEnabled)
-		const -> int32 override;
+		const override;
 
-	auto ComputeDesiredSize(float scale) const -> FVector2D override;
+	FVector2D ComputeDesiredSize(float scale) const override;
 	
-	virtual auto Advanced_IsInvalidationRoot() const -> bool { return m_EnableRetainedRendering; }
+	virtual bool Advanced_IsInvalidationRoot() const { return m_EnableRetainedRendering; }
 
-	auto Advanced_AsInvalidationRoot() const -> FSlateInvalidationRoot const* override
+	FSlateInvalidationRoot const* Advanced_AsInvalidationRoot() const override
 	{
 		return m_EnableRetainedRendering ? this : nullptr;
 	}
 
-	auto CustomPrepass(float layoutScaleMultiplier) -> bool override;
+	bool CustomPrepass(float layoutScaleMultiplier) override;
 
-	auto GetRootWidget() -> TSharedRef<SWidget> override;
-	auto PaintSlowPath(FSlateInvalidationContext const& ctx) -> int32 override;
+	TSharedRef<SWidget> GetRootWidget() override;
+	int32 PaintSlowPath(FSlateInvalidationContext const& ctx) override;
 
-	enum class EPaintRetainedContentResult {
+	enum class EPaintRetainedContentResult
+	{
 		NotPainted,
 		Painted,
 		Queued,
 		TextureSizeTooBig,
 		TextureSizeZero,
 	};
-	auto PaintRetainedContentImpl(
+	EPaintRetainedContentResult PaintRetainedContentImpl(
 		FSlateInvalidationContext const& ctx,
 		FGeometry const& geo,
-		int32 layerId)
-		-> EPaintRetainedContentResult;
+		int32 layerId);
 
 	void RefreshRenderingMode();
-	auto ShouldBeRenderingOffscreen() const -> bool;
-	auto IsAnythingVisibleToRender() const -> bool;
+	bool ShouldBeRenderingOffscreen() const;
+	bool IsAnythingVisibleToRender() const;
 	void OnRetainerModeChanged();
 	void OnRootInvalidated();
 

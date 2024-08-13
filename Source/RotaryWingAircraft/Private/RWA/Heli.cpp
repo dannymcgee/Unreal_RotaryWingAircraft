@@ -9,12 +9,10 @@ DEFINE_LOG_CATEGORY(LogHeli)
 #define HELI_LOG(msg, ...) UE_LOG(LogHeli, Log, TEXT(msg), __VA_ARGS__)
 #define HELI_WARN(msg, ...) UE_LOG(LogHeli, Warning, TEXT(msg), __VA_ARGS__)
 
-#define Self ARWA_Heli
-
 
 // Initialization --------------------------------------------------------------
 
-Self::ARWA_Heli(FObjectInitializer const& init)
+ARWA_Heli::ARWA_Heli(FObjectInitializer const& init)
 	: Super(init)
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -26,14 +24,14 @@ Self::ARWA_Heli(FObjectInitializer const& init)
 	m_VehicleMovement = InitVehicleMovement(m_Mesh);
 }
 
-void Self::BeginPlay()
+void ARWA_Heli::BeginPlay()
 {
 	Super::BeginPlay();
 
 	AddInputMappingContext();
 }
 
-auto Self::InitSkelMesh() -> USkeletalMeshComponent*
+USkeletalMeshComponent* ARWA_Heli::InitSkelMesh()
 {
 	auto* mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("VehicleMesh"));
 	mesh->SetCollisionProfileName(UCollisionProfile::Vehicle_ProfileName);
@@ -47,7 +45,7 @@ auto Self::InitSkelMesh() -> USkeletalMeshComponent*
 	return mesh;
 }
 
-auto Self::InitVehicleMovement(USkeletalMeshComponent* mesh) -> URWA_HeliMovementComponent*
+URWA_HeliMovementComponent* ARWA_Heli::InitVehicleMovement(USkeletalMeshComponent* mesh) 
 {
 	auto* cmp = CreateDefaultSubobject<URWA_HeliMovementComponent>(TEXT("VehicleMovement"));
 	cmp->SetIsReplicated(true);
@@ -59,17 +57,17 @@ auto Self::InitVehicleMovement(USkeletalMeshComponent* mesh) -> URWA_HeliMovemen
 
 // Getters ---------------------------------------------------------------------
 
-auto Self::GetMesh() const -> USkeletalMeshComponent*
+USkeletalMeshComponent* ARWA_Heli::GetMesh() const
 {
 	return m_Mesh;
 }
 
-auto Self::GetVehicleMovement() const -> URWA_HeliMovementComponent*
+URWA_HeliMovementComponent* ARWA_Heli::GetVehicleMovement() const
 {
 	return m_VehicleMovement;
 }
 
-auto Self::GetMovementComponent() const -> UPawnMovementComponent*
+UPawnMovementComponent* ARWA_Heli::GetMovementComponent() const
 {
 	return m_VehicleMovement;
 }
@@ -77,30 +75,30 @@ auto Self::GetMovementComponent() const -> UPawnMovementComponent*
 
 // Input handling --------------------------------------------------------------
 
-void Self::AddInputMappingContext() const
+void ARWA_Heli::AddInputMappingContext() const
 {
-	if (auto* inputSubsys = GetInputSubsystem())
+	if (IEnhancedInputSubsystemInterface* inputSubsys = GetInputSubsystem())
 		inputSubsys->AddMappingContext(DefaultMappingContext, 0);
 }
 
-void Self::RemoveInputMappingContext() const
+void ARWA_Heli::RemoveInputMappingContext() const
 {
-	if (auto* inputSubsys = GetInputSubsystem())
+	if (IEnhancedInputSubsystemInterface* inputSubsys = GetInputSubsystem())
 		inputSubsys->RemoveMappingContext(DefaultMappingContext);
 }
 
-auto Self::GetInputSubsystem() const -> IEnhancedInputSubsystemInterface*
+IEnhancedInputSubsystemInterface* ARWA_Heli::GetInputSubsystem() const
 {
 	auto* pc = Cast<APlayerController>(Controller);
 	if (pc == nullptr) return nullptr;
 
-	auto* lp = pc->GetLocalPlayer();
+	ULocalPlayer* lp = pc->GetLocalPlayer();
 	if (lp == nullptr) return nullptr;
 
 	return ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(lp);
 }
 
-void Self::SetupPlayerInputComponent(UInputComponent* inputCmp)
+void ARWA_Heli::SetupPlayerInputComponent(UInputComponent* inputCmp)
 {
 	if (auto* input = CastChecked<UEnhancedInputComponent>(inputCmp)) {
 		input->BindAction(CyclicAction, ETriggerEvent::Triggered, this, &Self::OnCyclic);
@@ -121,7 +119,7 @@ void Self::SetupPlayerInputComponent(UInputComponent* inputCmp)
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
-void Self::OnCyclic(FInputActionValue const& value)
+void ARWA_Heli::OnCyclic(FInputActionValue const& value)
 {
 	auto input = value.Get<FVector2D>();
 
@@ -130,18 +128,17 @@ void Self::OnCyclic(FInputActionValue const& value)
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
-void Self::OnCollective(FInputActionValue const& value)
+void ARWA_Heli::OnCollective(FInputActionValue const& value)
 {
 	m_VehicleMovement->SetCollectiveInput(value.Get<float>());
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
-void Self::OnAntiTorque(FInputActionValue const& value)
+void ARWA_Heli::OnAntiTorque(FInputActionValue const& value)
 {
 	m_VehicleMovement->SetYawInput(value.Get<float>());
 }
 
 
-#undef Self
 #undef HELI_LOG
 #undef HELI_WARN

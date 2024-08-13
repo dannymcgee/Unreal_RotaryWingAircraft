@@ -7,7 +7,8 @@ DECLARE_LOG_CATEGORY_EXTERN(LogHeliMvmt, Log, All);
 
 
 USTRUCT(DisplayName="Rotor Setup")
-struct ROTARYWINGAIRCRAFT_API FRWA_RotorSetup {
+struct ROTARYWINGAIRCRAFT_API FRWA_RotorSetup
+{
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, Category="Rotor Setup")
@@ -27,9 +28,12 @@ UCLASS(
 	),
 	meta=(BlueprintSpawnableComponent)
 )
-class ROTARYWINGAIRCRAFT_API URWA_HeliMovementComponent : public UPawnMovementComponent {
+class ROTARYWINGAIRCRAFT_API URWA_HeliMovementComponent
+	: public UPawnMovementComponent
+{
 	GENERATED_BODY()
 
+	using Self = URWA_HeliMovementComponent;
 
 public:
 
@@ -173,14 +177,16 @@ private:
 
 	// Data Structures ----------------------------------------------------------
 
-	struct FInput {
+	struct FInput
+	{
 		float Collective = 0;
 		float Pitch = 0;
 		float Roll = 0;
 		float Yaw = 0;
 	};
 
-	enum class EEngineState : uint8 {
+	enum class EEngineState : uint8
+	{
 		Off,
 		SpoolingUp,
 		Running,
@@ -188,7 +194,8 @@ private:
 	};
 
 	// Helper for tracking engine state transitions during the "spooling" phases
-	struct FEngineState {
+	struct FEngineState
+	{
 		EEngineState Phase = EEngineState::Off;
 		float SpoolAlpha = 0;
 		float PowerAlpha = 0;
@@ -196,7 +203,8 @@ private:
 	};
 
 	// Container for data read from the physics body
-	struct FPhysicsState {
+	struct FPhysicsState
+	{
 		float Mass = 0;
 		float CrossSectionalArea = 0;
 		/** In radians */
@@ -217,33 +225,33 @@ private:
 	inline static float const k_Gravity = -981;
 	inline static float const k_CmPerSecToKnots = 0.019438;
 
-	auto GetPawn() const -> APawn*;
-	auto GetBodyInstance() const -> FBodyInstance*;
+	APawn* GetPawn() const;
+	FBodyInstance* GetBodyInstance() const;
 
 	/**
 	 * IMPORTANT: This should only be called from a FPhysicsCommand read/write
 	 * callback with a locked mutex.
 	 */
-	auto ComputeCrossSectionalArea(
+	float ComputeCrossSectionalArea(
 		FBodyInstance const* body,
 		FPhysicsActorHandle const& handle,
-		FVector velocityNormal)
-		const -> float;
+		FVector const& velocityDirection)
+		const;
 
-	auto ComputeThrust(FVector const& pos, float mass) const -> FVector;
-	auto ComputeDrag(FVector const& velocity, float aoa, float area) const -> FVector;
-	auto ComputeTorque(FVector const& angularVelocity, float mass) const -> FVector;
+	FVector ComputeThrust(FVector const& pos, float mass) const;
+	FVector ComputeDrag(FVector const& velocity, float aoa, float area) const;
+	FVector ComputeTorque(FVector const& angularVelocity, float mass) const;
 	void ComputeAeroTorque(FVector const& velocity, float mass, FVector& inout_torque) const;
 
-	auto Forward() const -> FVector;
-	auto Right() const -> FVector;
-	auto Up() const -> FVector;
+	FVector Forward() const;
+	FVector Right() const;
+	FVector Up() const;
 
 	void DebugPhysicsSimulation(
 		FVector const& centerOfMass,
 		FVector const& linearVelocity,
 		FVector const& thrust,
 		FVector const& drag,
-		double crossSectionalArea)
+		float crossSectionalArea)
 		const;
 };

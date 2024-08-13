@@ -4,7 +4,8 @@
 #include "Modules/ModuleInterface.h"
 
 
-class FRotaryWingAircraftModule : public IModuleInterface {
+class FRotaryWingAircraftModule : public IModuleInterface
+{
 public:
 	/** IModuleInterface implementation */
 	void StartupModule() override {}

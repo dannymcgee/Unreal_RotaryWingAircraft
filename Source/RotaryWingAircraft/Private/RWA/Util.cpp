@@ -6,7 +6,7 @@
 
 namespace RWA::Util {
 
-auto ToString(FInputActionValue const& input) -> FString
+FString ToString(FInputActionValue const& input) 
 {
 	switch (input.GetValueType()) {
 		case EInputActionValueType::Boolean:
@@ -27,7 +27,7 @@ auto ToString(FInputActionValue const& input) -> FString
 	return "";
 }
 
-auto ToString(FCubicBezier const& curve) -> FString
+FString ToString(FCubicBezier const& curve)
 {
 	return FString::Printf(
 		TEXT("P0[ %.3f, %.3f ], P1[ %.3f, %.3f ], P2[ %.3f, %.3f ], P3[ %.3f, %.3f ]"),

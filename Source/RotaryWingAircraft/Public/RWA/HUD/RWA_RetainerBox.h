@@ -9,7 +9,8 @@ class SRWA_RetainerWidget;
 
 
 UCLASS(DisplayName="RWA Retainer Box")
-class ROTARYWINGAIRCRAFT_API URWA_RetainerBox : public UContentWidget {
+class ROTARYWINGAIRCRAFT_API URWA_RetainerBox : public UContentWidget
+{
 	GENERATED_BODY()
 
 public:
@@ -82,10 +83,10 @@ public:
 	void ReleaseSlateResources(bool releaseChildren) override;
 
 #if WITH_EDITOR
-	auto GetPaletteCategory() -> FText const override;
+	FText const GetPaletteCategory() override;
 #endif
 
-	auto GetCachedAllottedGeometry() const -> FGeometry;
+	FGeometry GetCachedAllottedGeometry() const;
 
 protected:
 	/**
@@ -111,12 +112,12 @@ protected:
 	void OnSlotRemoved(UPanelSlot* slot) override;
 
 	// UWidget interface
-	auto RebuildWidget() -> TSharedRef<SWidget> override;
+	TSharedRef<SWidget> RebuildWidget() override;
 	void SynchronizeProperties() override;
 
 	// UObject interface
 #if WITH_EDITOR
-	auto CanEditChange(FProperty const* property) const -> bool override;
+	bool CanEditChange(FProperty const* property) const override;
 #endif
 
 protected:
