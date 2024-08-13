@@ -9,7 +9,8 @@ class URWA_HeliMovementComponent;
 struct FRWA_RotorSetup;
 
 
-struct FRWA_RotorAnimData {
+struct FRWA_RotorAnimData
+{
 	FName BoneName = EName::None;
 	FRotator Rotation = FRotator::ZeroRotator;
 	FVector TorqueNormal = FVector::UpVector;
@@ -20,7 +21,9 @@ struct FRWA_RotorAnimData {
 
 
 USTRUCT()
-struct ROTARYWINGAIRCRAFT_API FRWA_HeliAnimInstanceProxy : public FAnimInstanceProxy {
+struct ROTARYWINGAIRCRAFT_API FRWA_HeliAnimInstanceProxy
+	: public FAnimInstanceProxy
+{
 	GENERATED_BODY()
 
 	FRWA_HeliAnimInstanceProxy() = default;
@@ -29,7 +32,7 @@ struct ROTARYWINGAIRCRAFT_API FRWA_HeliAnimInstanceProxy : public FAnimInstanceP
 public:
 	void SetMovementComponent(URWA_HeliMovementComponent const* mc);
 	void PreUpdate(UAnimInstance* instance, float deltaTime) override;
-	auto GetAnimData() const -> TArray<FRWA_RotorAnimData> const&;
+	TArray<FRWA_RotorAnimData> const& GetAnimData() const;
 
 private:
 	inline static constexpr
@@ -42,13 +45,15 @@ private:
 
 
 UCLASS(Transient)
-class ROTARYWINGAIRCRAFT_API URWA_HeliAnimInstance : public UAnimInstance {
+class ROTARYWINGAIRCRAFT_API URWA_HeliAnimInstance
+	: public UAnimInstance
+{
 	GENERATED_BODY()
 
 public:
 	URWA_HeliAnimInstance() : Super() {}
 	void SetMovementComponent(URWA_HeliMovementComponent const* mc);
-	auto GetMovementComponent() const -> URWA_HeliMovementComponent const*;
+	URWA_HeliMovementComponent const* GetMovementComponent() const;
 
 private:
 	FRWA_HeliAnimInstanceProxy m_Proxy = {};
@@ -60,6 +65,6 @@ private:
 	ARWA_Heli* GetVehicle() const;
 
 	void NativeInitializeAnimation() override;
-	auto CreateAnimInstanceProxy() -> FAnimInstanceProxy* override;
+	FAnimInstanceProxy* CreateAnimInstanceProxy() override;
 	void DestroyAnimInstanceProxy(FAnimInstanceProxy* proxy) override;
 };

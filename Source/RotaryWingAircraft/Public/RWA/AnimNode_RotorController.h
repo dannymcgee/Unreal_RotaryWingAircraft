@@ -7,7 +7,8 @@
 struct FRWA_HeliAnimInstanceProxy;
 
 
-struct FRWA_RotorLookupData {
+struct FRWA_RotorLookupData
+{
 	int32 Index;
 	FBoneReference BoneRef;
 
@@ -20,7 +21,9 @@ struct FRWA_RotorLookupData {
 
 
 USTRUCT()
-struct ROTARYWINGAIRCRAFT_API FAnimNode_RWA_RotorController : public FAnimNode_SkeletalControlBase {
+struct ROTARYWINGAIRCRAFT_API FAnimNode_RWA_RotorController
+	: public FAnimNode_SkeletalControlBase
+{
 	GENERATED_BODY()
 
 public:
@@ -29,10 +32,10 @@ public:
 	void GatherDebugData(FNodeDebugData& data) override;
 	void Initialize_AnyThread(FAnimationInitializeContext const& ctx) override;
 
-	auto IsValidToEvaluate(
+	bool IsValidToEvaluate(
 		USkeleton const* skel,
 		FBoneContainer const& requiredBones)
-		-> bool override;
+		override;
 
 	void EvaluateSkeletalControl_AnyThread(
 		FComponentSpacePoseContext& inout_ctx,

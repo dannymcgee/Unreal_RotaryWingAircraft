@@ -1,3 +1,9 @@
+# [2.2.0] - Upgrade to UE 5.4
+
+* Migrated raw pointer properties to `TObjectPtr`
+* Fixed an issue with thrust computation that made aircraft tuning difficult
+* Refactored C++ to move closer to Epic's style conventions
+
 # [2.1.1] - Bug fixes
 
 * Fixed an issue that prevented the game from being packaged

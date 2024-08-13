@@ -4,7 +4,6 @@
 #include "Input/HittestGrid.h"
 #include "Slate/WidgetRenderer.h"
 
-#define Self SRWA_RetainerWidget
 
 DECLARE_CYCLE_STAT(
 	TEXT("RWA Retainer Widget Tick"),
@@ -16,14 +15,14 @@ DECLARE_CYCLE_STAT(
 	STATGROUP_Slate);
 
 #if !UE_BUILD_SHIPPING
-FRWA_OnRetainedModeChanged Self::s_OnRetainedModeChangedDelegate {};
+FRWA_OnRetainedModeChanged SRWA_RetainerWidget::s_OnRetainedModeChangedDelegate {};
 #endif
 
 
 // CVars =======================================================================
 
 int32 g_EnableRetainedRendering = 1;
-auto RWA_EnableRetainedRendering = FAutoConsoleVariableRef{
+FAutoConsoleVariableRef RWA_EnableRetainedRendering {
 	TEXT("Slate.RWAEnableRetainedRendering"),
 	g_EnableRetainedRendering,
 	TEXT("Whether to attempt to render things in SRWA_RenderEffectsWidgets to "
@@ -31,14 +30,14 @@ auto RWA_EnableRetainedRendering = FAutoConsoleVariableRef{
 };
 
 bool g_SlateEnableRenderWithLocalTransform = true;
-auto CVarGlateRWA_EnableRenderWithLocalTransform = FAutoConsoleVariableRef{
+FAutoConsoleVariableRef CVarGlateRWA_EnableRenderWithLocalTransform {
 	TEXT("Slate.RWAEnableRetainedRenderingWithLocalTransform"),
 	g_SlateEnableRenderWithLocalTransform,
 	TEXT("Whether to render with the local transform or the one passed down "
 		"from the parent widget."),
 };
 
-static auto IsRetainedRenderingEnabled() -> bool
+static bool IsRetainedRenderingEnabled()
 {
 	return g_EnableRetainedRendering != 0;
 }
@@ -52,8 +51,8 @@ class FRWA_RenderResources
 {
 public:
 	FWidgetRenderer* WidgetRenderer = nullptr;
-	UTextureRenderTarget2D* RenderTarget = nullptr;
-	UMaterialInstanceDynamic* DynamicEffect = nullptr;
+	TObjectPtr<UTextureRenderTarget2D> RenderTarget = nullptr;
+	TObjectPtr<UMaterialInstanceDynamic> DynamicEffect = nullptr;
 
 public:
 	FRWA_RenderResources() = default;
@@ -69,7 +68,7 @@ public:
 		collector.AddReferencedObject(DynamicEffect);
 	}
 
-	auto GetReferencerName() const -> FString override
+	FString GetReferencerName() const override
 	{
 		return TEXT("FRWA_RenderResources");
 	}
@@ -78,13 +77,13 @@ public:
 
 // SRWA_RetainerWidget =========================================================
 
-TArray<Self*,TInlineAllocator<3>> Self::s_WaitingToRender {};
+TArray<SRWA_RetainerWidget*,TInlineAllocator<3>> SRWA_RetainerWidget::s_WaitingToRender {};
 
-int32 Self::s_MaxRetainerWorkPerFrame = 0;
+int32 SRWA_RetainerWidget::s_MaxRetainerWorkPerFrame = 0;
 
-TFrameValue<int32> Self::s_RetainerWorkThisFrame = 3;
+TFrameValue<int32> SRWA_RetainerWidget::s_RetainerWorkThisFrame = 3;
 
-Self::SRWA_RetainerWidget()
+SRWA_RetainerWidget::SRWA_RetainerWidget()
 	: m_PrevRenderSize(FIntPoint::NoneValue)
 	, m_PrevClipRectSize(FIntPoint::NoneValue)
 	, m_PrevColorAndOpacity(FColor::Transparent)
@@ -112,7 +111,7 @@ Self::SRWA_RetainerWidget()
 	SetCanTick(false);
 }
 
-Self::~SRWA_RetainerWidget()
+SRWA_RetainerWidget::~SRWA_RetainerWidget()
 {
 	if (FSlateApplication::IsInitialized()) {
 		FSlateApplicationBase::Get()
@@ -132,7 +131,7 @@ Self::~SRWA_RetainerWidget()
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
-void Self::UpdateWidgetRenderer()
+void SRWA_RetainerWidget::UpdateWidgetRenderer()
 {
 	// We can't write out linear. If we write out linear, then we end up with
 	// premultiplied alpha in linear space, which blending with gamma space later
@@ -140,7 +139,7 @@ void Self::UpdateWidgetRenderer()
 	// blending in gamma space.
 	bool const writeContentInGammaSpace = true;
 	
-	auto*& wr = m_RenderResources->WidgetRenderer;
+	FWidgetRenderer*& wr = m_RenderResources->WidgetRenderer;
 	if (!wr) wr = new FWidgetRenderer(writeContentInGammaSpace);
 
 	wr->SetUseGammaCorrection(writeContentInGammaSpace);
@@ -152,7 +151,7 @@ void Self::UpdateWidgetRenderer()
 	wr->SetClearHitTestGrid(false);
 
 	// Update the render target to match the current gamma rendering prefs
-	auto* rt = m_RenderResources->RenderTarget;
+	UTextureRenderTarget2D* rt = m_RenderResources->RenderTarget;
 	if (rt && rt->SRGB != writeContentInGammaSpace) {
 		// NOTE: We do the opposite here of whatever write is. If we're writing
 		// out gamma, then sRGB writes were not supported, so it won't be an sRGB
@@ -165,7 +164,7 @@ void Self::UpdateWidgetRenderer()
 	}
 }
 
-void Self::Construct(FArguments const& args)
+void SRWA_RetainerWidget::Construct(FArguments const& args)
 {
 	STAT(m_StatId = FDynamicStats::CreateStatId<FStatGroup_STATGROUP_Slate>(args._StatId));
 
@@ -219,17 +218,17 @@ void Self::Construct(FArguments const& args)
 	}
 }
 
-auto Self::ShouldBeRenderingOffscreen() const -> bool
+bool SRWA_RetainerWidget::ShouldBeRenderingOffscreen() const
 {
 	return m_EnableRetainedRenderingDesire && IsRetainedRenderingEnabled();
 }
 
-auto Self::IsAnythingVisibleToRender() const -> bool
+bool SRWA_RetainerWidget::IsAnythingVisibleToRender() const
 {
 	return m_Widget.IsValid() && m_Widget->GetVisibility().IsVisible();
 }
 
-void Self::OnRetainerModeChanged()
+void SRWA_RetainerWidget::OnRetainerModeChanged()
 {
 	if (m_Widget.IsValid())
 		InvalidateChildRemovedFromTree(*m_Widget.Get());
@@ -239,27 +238,31 @@ void Self::OnRetainerModeChanged()
 
 	// Invalidate my invalidation root, since all my children were once it's children
 	// it needs to force a generation bump just like me.
-	if (auto* invalidationRoot = GetProxyHandle().GetInvalidationRootHandle().GetInvalidationRoot())
+	if (FSlateInvalidationRoot* invalidationRoot = GetProxyHandle()
+		.GetInvalidationRootHandle()
+		.GetInvalidationRoot())
+	{
 		invalidationRoot->Advanced_ResetInvalidation(true);
+	}
 
 	RefreshRenderingMode();
 
 	m_RenderRequested = true;
 }
 
-void Self::OnRootInvalidated()
+void SRWA_RetainerWidget::OnRootInvalidated()
 {
 	RequestRender();
 }
 
 #if !UE_BUILD_SHIPPING
-void Self::OnRetainerModeCVarChanged( IConsoleVariable* CVar )
+void SRWA_RetainerWidget::OnRetainerModeCVarChanged( IConsoleVariable* CVar )
 {
 	s_OnRetainedModeChangedDelegate.Broadcast();
 }
 #endif
 
-void Self::SetRetainedRendering(bool value)
+void SRWA_RetainerWidget::SetRetainedRendering(bool value)
 {
 	if (m_EnableRetainedRenderingDesire != value) {
 		m_EnableRetainedRenderingDesire = value;
@@ -267,7 +270,7 @@ void Self::SetRetainedRendering(bool value)
 	}
 }
 
-void Self::RefreshRenderingMode()
+void SRWA_RetainerWidget::RefreshRenderingMode()
 {
 	bool const renderOffscreen = ShouldBeRenderingOffscreen();
 	
@@ -278,28 +281,30 @@ void Self::RefreshRenderingMode()
 	}
 }
 
-void Self::SetContent(TSharedRef<SWidget> const& content)
+void SRWA_RetainerWidget::SetContent(TSharedRef<SWidget> const& content)
 {
 	m_Widget = content;
 	ChildSlot[ content ];
 }
 
-auto Self::GetEffectMaterial() const -> UMaterialInstanceDynamic*
+UMaterialInstanceDynamic* SRWA_RetainerWidget::GetEffectMaterial() const
 {
 	return m_RenderResources->DynamicEffect;
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
-void Self::SetEffectMaterial(UMaterialInterface* value)
+void SRWA_RetainerWidget::SetEffectMaterial(UMaterialInterface* value)
 {
-	if (value) {
+	if (value)
+	{
 		auto* effect = Cast<UMaterialInstanceDynamic>(value);
 		if (!effect) effect = UMaterialInstanceDynamic::Create(value, GetTransientPackage());
 
 		m_RenderResources->DynamicEffect = effect;
 		m_SurfaceBrush.SetResourceObject(m_RenderResources->DynamicEffect);
 	}
-	else {
+	else
+	{
 		m_RenderResources->DynamicEffect = nullptr;
 		m_SurfaceBrush.SetResourceObject(m_RenderResources->RenderTarget);
 	}
@@ -307,17 +312,17 @@ void Self::SetEffectMaterial(UMaterialInterface* value)
 	UpdateWidgetRenderer();
 }
 
-void Self::SetTextureParameter(FName value)
+void SRWA_RetainerWidget::SetTextureParameter(FName value)
 {
 	m_DynamicEffectTextureParam = value;
 }
 
-void Self::SetWorld(UWorld* value)
+void SRWA_RetainerWidget::SetWorld(UWorld* value)
 {
 	m_OuterWorld = value;
 }
 
-auto Self::GetChildren() -> FChildren*
+FChildren* SRWA_RetainerWidget::GetChildren() 
 {
 	if (m_EnableRetainedRendering)
 		return &FNoChildren::NoChildrenInstance;
@@ -326,25 +331,25 @@ auto Self::GetChildren() -> FChildren*
 }
 
 #if WITH_SLATE_DEBUGGING
-auto Self::Debug_GetChildrenForReflector() -> FChildren*
+FChildren* SRWA_RetainerWidget::Debug_GetChildrenForReflector() 
 {
 	return Super::GetChildren();
 }
 #endif
 
-void Self::SetRenderingPhase(int32 phase, int32 phaseCount)
+void SRWA_RetainerWidget::SetRenderingPhase(int32 phase, int32 phaseCount)
 {
 	m_Phase = phase;
 	m_PhaseCount = phaseCount;
 }
 
-void Self::RequestRender()
+void SRWA_RetainerWidget::RequestRender()
 {
 	m_RenderRequested = true;
 	InvalidateRootChildOrder();
 }
 
-auto Self::PaintRetainedContentImpl(
+auto SRWA_RetainerWidget::PaintRetainedContentImpl(
 	FSlateInvalidationContext const& ctx,
 	FGeometry const& geo,
 	int32 layerId)
@@ -359,27 +364,28 @@ auto Self::PaintRetainedContentImpl(
 		InvalidateRootLayout();
 	}
 
-	auto paintGeo = geo.ToPaintGeometry();
-	auto xform = paintGeo.GetAccumulatedRenderTransform();
+	FPaintGeometry paintGeo = geo.ToPaintGeometry();
+	FSlateRenderTransform xform = paintGeo.GetAccumulatedRenderTransform();
 
-	auto const& scale2d = xform.GetMatrix().GetScale().GetVector();
-	auto const& localSize = FVector2f(paintGeo.GetLocalSize());
+	FVector2f const& scale2d = xform.GetMatrix().GetScale().GetVector();
+	FVector2f const& localSize = FVector2f(paintGeo.GetLocalSize());
 	// UE_LOG(LogTemp, Log, TEXT("Local Size:  %f x %f"), localSize.X, localSize.Y);
 	// UE_LOG(LogTemp, Log, TEXT("Scale 2D:    %f x %f"), scale2d.X, scale2d.Y);
 
-	auto renderSize = localSize * scale2d;
+	FVector2f renderSize = localSize * scale2d;
 	// UE_LOG(LogTemp, Log, TEXT("Render Size: %f x %f"), renderSize.X, renderSize.Y);
 
-	auto renderSizeRounded = renderSize.IntPoint();
+	FIntPoint renderSizeRounded = renderSize.IntPoint();
 
 	// Handle cache invalidation
-	if (m_RenderOnInvalidation) {
+	if (m_RenderOnInvalidation)
+	{
 		// the invalidation root will take care of whether or not we actually rendered
 		m_RenderRequested = true;
 		
 		// Aggressively re-layout when a base state changes
-		auto clipRectSize = ctx.CullingRect.GetSize().IntPoint();
-		auto clippingState = ctx.WindowElementList->GetClippingState();
+		FIntPoint clipRectSize = ctx.CullingRect.GetSize().IntPoint();
+		TOptional<FSlateClippingState> clippingState = ctx.WindowElementList->GetClippingState();
 
 		if (renderSizeRounded != m_PrevRenderSize
 			|| geo != m_PrevGeo
@@ -396,7 +402,7 @@ auto Self::PaintRetainedContentImpl(
 		}
 
 		// Aggressively re-paint when a base state changes
-		auto colorAndOpacityTint = ctx.WidgetStyle.GetColorAndOpacityTint().ToFColor(false);
+		FColor colorAndOpacityTint = ctx.WidgetStyle.GetColorAndOpacityTint().ToFColor(false);
 
 		if (layerId != m_LastIncomingLayerId
 			|| colorAndOpacityTint != m_PrevColorAndOpacity)
@@ -405,7 +411,8 @@ auto Self::PaintRetainedContentImpl(
 			m_PrevColorAndOpacity = colorAndOpacityTint;
 		}
 	}
-	else if (renderSizeRounded != m_PrevRenderSize) {
+	else if (renderSizeRounded != m_PrevRenderSize)
+	{
 		m_RenderRequested = true;
 		InvalidateRootLayout();
 		m_PrevRenderSize = renderSizeRounded;
@@ -430,7 +437,7 @@ auto Self::PaintRetainedContentImpl(
 	// RetainerWidget are the only locations where this information exists in
 	// Slate, so we push the current scene onto the current Slate application
 	// so that we can leverage it in later calls.
-	auto* world = m_OuterWorld.Get();
+	UWorld* world = m_OuterWorld.Get();
 	if (world && world->Scene && IsInGameThread())
 		FSlateApplication::Get().GetRenderer()->RegisterCurrentScene(world->Scene);
 	else if (IsInGameThread())
@@ -447,7 +454,8 @@ auto Self::PaintRetainedContentImpl(
 	uint32 rtHeight = FMath::RoundToInt(FMath::Abs(renderSize.Y));
 
 	// Handle invalid states
-	if (FMath::Max(rtWidth, rtHeight) > GetMax2DTextureDimension()) {
+	if (FMath::Max(rtWidth, rtHeight) > GetMax2DTextureDimension())
+	{
 		// TODO: Replace with a proper logger category
 		UE_LOG(LogTemp, Error,
 			TEXT("The requested size for SRWA_RetainerWidget is too large! "
@@ -456,7 +464,8 @@ auto Self::PaintRetainedContentImpl(
 
 		return EPaintRetainedContentResult::TextureSizeTooBig;
 	}
-	if (rtWidth == 0 || rtHeight == 0) {
+	if (rtWidth == 0 || rtHeight == 0)
+	{
 		// TODO: Replace with a proper logger category
 		UE_LOG(LogTemp, Error,
 			TEXT("The requested size of SRWA_RetainerWidget has a zero dimension! "
@@ -466,8 +475,8 @@ auto Self::PaintRetainedContentImpl(
 		return EPaintRetainedContentResult::TextureSizeZero;
 	}
 
-	auto* rt = m_RenderResources->RenderTarget;
-	auto* wr = m_RenderResources->WidgetRenderer;
+	UTextureRenderTarget2D* rt = m_RenderResources->RenderTarget;
+	FWidgetRenderer* wr = m_RenderResources->WidgetRenderer;
 
 	// Handle size mismatch
 	if ((int32)rt->GetSurfaceWidth() != (int32)rtWidth
@@ -481,7 +490,8 @@ auto Self::PaintRetainedContentImpl(
 		{
 			rt->ResizeTarget(rtWidth, rtHeight);
 		}
-		else {
+		else
+		{
 			bool forceLinearGamma = false;
 			rt->InitCustomFormat(rtWidth, rtHeight, PF_B8G8R8A8, forceLinearGamma);
 			rt->UpdateResourceImmediate();
@@ -493,7 +503,7 @@ auto Self::PaintRetainedContentImpl(
 
 	wr->ViewOffset = -xform.GetTranslation();
 
-	auto repainted = wr->DrawInvalidationRoot(m_VirtualWindow, rt, *this, ctx, false);
+	bool repainted = wr->DrawInvalidationRoot(m_VirtualWindow, rt, *this, ctx, false);
 
 	m_RenderRequested = false;
 	s_WaitingToRender.Remove(this);
@@ -505,7 +515,7 @@ auto Self::PaintRetainedContentImpl(
 		: EPaintRetainedContentResult::NotPainted;
 }
 
-auto Self::OnPaint(
+int32 SRWA_RetainerWidget::OnPaint(
 	FPaintArgs const& args,
 	FGeometry const& geo,
 	FSlateRect const& cullingRect,
@@ -513,7 +523,7 @@ auto Self::OnPaint(
 	int32 layerId,
 	FWidgetStyle const& style,
 	bool parentEnabled)
-	const -> int32
+	const
 {
 	STAT(FScopeCycleCounter paintCycleCounter(m_StatId));
 
@@ -529,7 +539,7 @@ auto Self::OnPaint(
 
 	SCOPE_CYCLE_COUNTER(STAT_RWA_RetainerWidgetPaint);
 	
-	auto* self_mut = const_cast<Self*>(this);
+	Self* self_mut = const_cast<Self*>(this);
 
 	// Copy hit-test grid settings from the root
 
@@ -538,7 +548,7 @@ auto Self::OnPaint(
 	// here in userland, so we have to do this sketchy bullshit instead. If the
 	// type or offset of FPaintArgs::RootGrid ever changes, this is going to be a
 	// nightmare to debug.
-	auto const& rootGrid = **(FHittestGrid**)&args;
+	FHittestGrid const& rootGrid = **(FHittestGrid**)&args;
 
 	if (m_HitTestGrid->SetHittestArea(
 		rootGrid.GetGridOrigin(),
@@ -551,12 +561,12 @@ auto Self::OnPaint(
 	m_HitTestGrid->SetOwner(this);
 	m_HitTestGrid->SetCullingRect(cullingRect);
 
-	auto args_new = args.WithNewHitTestGrid(m_HitTestGrid.Get());
+	FPaintArgs args_new = args.WithNewHitTestGrid(m_HitTestGrid.Get());
 	// Copy the current user index into the new grid since nested hittest grids
 	// should inherit their parent's user id
 	args_new.GetHittestGrid().SetUserIndex(rootGrid.GetUserIndex());
 
-	auto ctx = FSlateInvalidationContext(out_drawElements, style);
+	FSlateInvalidationContext ctx (out_drawElements, style);
 	ctx.bParentEnabled = parentEnabled;
 	ctx.bAllowFastPathUpdate = true;
 	ctx.LayoutScaleMultiplier = GetPrepassLayoutScaleMultiplier();
@@ -564,7 +574,7 @@ auto Self::OnPaint(
 	ctx.IncomingLayerId = layerId;
 	ctx.CullingRect = cullingRect;
 
-	auto paintResult = self_mut->PaintRetainedContentImpl(ctx, geo, layerId);
+	EPaintRetainedContentResult paintResult = self_mut->PaintRetainedContentImpl(ctx, geo, layerId);
 
 #if WITH_SLATE_DEBUGGING
 	if (paintResult == EPaintRetainedContentResult::NotPainted
@@ -588,18 +598,18 @@ auto Self::OnPaint(
 	if (paintResult == EPaintRetainedContentResult::TextureSizeZero)
 		return GetCachedMaxLayerId();
 
-	auto* rt = m_RenderResources->RenderTarget;
+	UTextureRenderTarget2D* rt = m_RenderResources->RenderTarget;
 	check(rt);
 
 	if (rt->GetSurfaceWidth() >= 1.f && rt->GetSurfaceHeight() >= 1.f) {
-		auto computedColorAndOpacity =
+		FLinearColor computedColorAndOpacity =
 			ctx.WidgetStyle.GetColorAndOpacityTint()
 				* GetColorAndOpacity()
 				* m_SurfaceBrush.GetTint(ctx.WidgetStyle);
 
-		auto premulColorAndOpacity = computedColorAndOpacity * computedColorAndOpacity.A;
+		FLinearColor premulColorAndOpacity = computedColorAndOpacity * computedColorAndOpacity.A;
 		
-		if (auto* effect = m_RenderResources->DynamicEffect)
+		if (UMaterialInstanceDynamic* effect = m_RenderResources->DynamicEffect)
 			effect->SetTextureParameterValue(m_DynamicEffectTextureParam, rt);
 
 		FSlateDrawElement::MakeBox(
@@ -619,7 +629,7 @@ auto Self::OnPaint(
 	return GetCachedMaxLayerId();
 }
 
-auto Self::ComputeDesiredSize(float scale) const -> FVector2D
+FVector2D SRWA_RetainerWidget::ComputeDesiredSize(float scale) const
 {
 	if (!m_EnableRetainedRendering)
 		return Super::ComputeDesiredSize(scale);
@@ -627,13 +637,13 @@ auto Self::ComputeDesiredSize(float scale) const -> FVector2D
 	return m_Widget->GetDesiredSize();
 }
 
-void Self::OnGlobalInvalidationToggled(bool value)
+void SRWA_RetainerWidget::OnGlobalInvalidationToggled(bool value)
 {
 	InvalidateRootChildOrder();
 	ClearAllFastPathData(true);
 }
 
-auto Self::CustomPrepass(float layoutScaleMultiplier) -> bool
+bool SRWA_RetainerWidget::CustomPrepass(float layoutScaleMultiplier)
 {
 	if (!m_EnableRetainedRendering)
 		return true;
@@ -641,14 +651,14 @@ auto Self::CustomPrepass(float layoutScaleMultiplier) -> bool
 	ProcessInvalidation();
 
 	if (NeedsSlowPath()) {
-		auto* children = Super::GetChildren();
+		FChildren* children = Super::GetChildren();
 		Prepass_ChildLoop(layoutScaleMultiplier, children);
 	}
 
 	return false;
 }
 
-auto Self::GetRootWidget() -> TSharedRef<SWidget>
+TSharedRef<SWidget> SRWA_RetainerWidget::GetRootWidget() 
 {
 	if (!m_EnableRetainedRendering)
 		return SNullWidget::NullWidget;
@@ -656,15 +666,16 @@ auto Self::GetRootWidget() -> TSharedRef<SWidget>
 	return Super::GetChildren()->GetChildAt(0);
 }
 
-auto Self::PaintSlowPath(FSlateInvalidationContext const& ctx) -> int32
+int32 SRWA_RetainerWidget::PaintSlowPath(FSlateInvalidationContext const& ctx) 
 {
 	if (m_EnableRenderWithLocalTransform && g_SlateEnableRenderWithLocalTransform) {
-		auto geo = GetPaintSpaceGeometry();
-		auto simplifiedXform = FSlateRenderTransform(
+		FGeometry geo = GetPaintSpaceGeometry();
+		FSlateRenderTransform simplifiedXform {
 			geo.GetAccumulatedRenderTransform().GetMatrix().GetScale(),
-			geo.GetAccumulatedRenderTransform().GetTranslation());
+			geo.GetAccumulatedRenderTransform().GetTranslation(),
+		};
 
-		auto const geo_new =
+		FGeometry const geo_new =
 			FGeometry::MakeRoot(geo.GetLocalSize(), FSlateLayoutTransform())
 				.MakeChild(simplifiedXform, FVector2D::ZeroVector);
 
@@ -688,5 +699,3 @@ auto Self::PaintSlowPath(FSlateInvalidationContext const& ctx) -> int32
 		ctx.bParentEnabled);
 }
 
-
-#undef Self

@@ -4,15 +4,14 @@
 #include "RWA/SCubicBezierViewer.h"
 
 #define LOCTEXT_NAMESPACE "RotaryWingAircraftEditor"
-#define Self FCubicBezierStructCustomization
 
 
-auto Self::MakeInstance() -> TSharedRef<IPropertyTypeCustomization>
+TSharedRef<IPropertyTypeCustomization> FCubicBezierStructCustomization::MakeInstance() 
 {
-	return MakeShareable(new Self);
+	return MakeShareable(new FCubicBezierStructCustomization);
 }
 
-void Self::CustomizeHeader(
+void FCubicBezierStructCustomization::CustomizeHeader(
 	TSharedRef<IPropertyHandle> propHandle,
 	FDetailWidgetRow& row,
 	IPropertyTypeCustomizationUtils& utils)
@@ -47,12 +46,12 @@ void Self::CustomizeHeader(
 			.MaxDesiredWidth({})
 		[
 			SNew(SCubicBezierViewer)
-				.CubicBezier(this, &Self::GetCurrentValue)
+				.CubicBezier(this, &FCubicBezierStructCustomization::GetCurrentValue)
 				.ColorAndOpacity(FColor{ 0xFF, 0xFF, 0xFF, 0x14 })
 		];
 }
 
-auto Self::GetCurrentValue() const -> TOptional<FCubicBezier>
+TOptional<FCubicBezier> FCubicBezierStructCustomization::GetCurrentValue() const 
 {
 	TArray<void*> structPtrs;
 	m_Handle->AccessRawData(structPtrs);
@@ -67,5 +66,4 @@ auto Self::GetCurrentValue() const -> TOptional<FCubicBezier>
 }
 
 
-#undef Self
 #undef LOCTEXT_NAMESPACE

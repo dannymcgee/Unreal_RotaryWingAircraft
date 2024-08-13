@@ -5,7 +5,8 @@
 
 
 USTRUCT()
-struct FCubicBezier {
+struct FCubicBezier
+{
 	GENERATED_BODY()
 
 public:
@@ -21,7 +22,7 @@ public:
 		: P0(p0), P1(p1), P2(p2), P3(p3)
 	{}
 
-	FORCEINLINE static auto IsNearlyEqual(FCubicBezier const& lhs, FCubicBezier const& rhs) -> bool
+	FORCEINLINE static bool IsNearlyEqual(FCubicBezier const& lhs, FCubicBezier const& rhs)
 	{
 		return FMath::IsNearlyEqual(lhs.P0.X, rhs.P0.X) && FMath::IsNearlyEqual(lhs.P0.Y, rhs.P0.Y)
 			&& FMath::IsNearlyEqual(lhs.P1.X, rhs.P1.X) && FMath::IsNearlyEqual(lhs.P1.Y, rhs.P1.Y)
@@ -29,7 +30,7 @@ public:
 			&& FMath::IsNearlyEqual(lhs.P3.X, rhs.P3.X) && FMath::IsNearlyEqual(lhs.P3.Y, rhs.P3.Y);
 	}
 
-	FORCEINLINE auto Duration() const -> float
+	FORCEINLINE float Duration() const 
 	{
 		return P3.X - P0.X;
 	}
@@ -38,14 +39,14 @@ public:
 	 * Binary-search for the point along the curve where x ~= the provided value,
 	 * and return the corresponding y.
 	 */
-	FORCEINLINE auto YForX(float x) const -> float
+	FORCEINLINE float YForX(float x) const
 	{
 		int32 iterations = 1;
 		float lower = 0.f;
 		float upper = 1.f;
 		float t = (upper + lower) / 2.f;
 
-		auto result = Get(t);
+		Point result = Get(t);
 
 		while (FMath::Abs(x - result.X) > 0.001f) {
 			if (++iterations > 9999)
@@ -67,16 +68,17 @@ public:
 	 * Binary-search for the point along the curve where y ~= the provided value,
 	 * and return the corresponding x.
 	 */
-	FORCEINLINE auto XForY(float y) const -> float
+	FORCEINLINE float XForY(float y) const
 	{
 		int32 iterations = 1;
 		float lower = 0.f;
 		float upper = 1.f;
 		float t = (upper + lower) / 2.f;
 
-		auto result = Get(t);
+		Point result = Get(t);
 
-		while (FMath::Abs(y - result.Y) > 0.001f) {
+		while (FMath::Abs(y - result.Y) > 0.001f)
+		{
 			if (++iterations > 9999)
 				break;
 
@@ -93,13 +95,13 @@ public:
 	}
 
 	/** Evaluate the curve for the given `t` value. */
-	FORCEINLINE auto Get(float t) const -> Point
+	FORCEINLINE Point Get(float t) const 
 	{
-		auto a = FMath::Lerp(P0,P1,t);
-		auto b = FMath::Lerp(P1,P2,t);
-		auto c = FMath::Lerp(P2,P3,t);
-		auto d = FMath::Lerp(a,b,t);
-		auto e = FMath::Lerp(b,c,t);
+		Point a = FMath::Lerp(P0,P1,t);
+		Point b = FMath::Lerp(P1,P2,t);
+		Point c = FMath::Lerp(P2,P3,t);
+		Point d = FMath::Lerp(a,b,t);
+		Point e = FMath::Lerp(b,c,t);
 		return FMath::Lerp(d,e,t);
 	}
 };

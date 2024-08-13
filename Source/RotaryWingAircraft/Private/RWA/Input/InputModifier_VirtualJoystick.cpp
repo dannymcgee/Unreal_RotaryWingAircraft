@@ -2,14 +2,11 @@
 
 #include "EnhancedPlayerInput.h"
 
-#define Self UInputModifier_RWA_VirtualJoystick
 
-
-auto Self::ModifyRaw_Implementation(
+FInputActionValue UInputModifier_RWA_VirtualJoystick::ModifyRaw_Implementation(
 	UEnhancedPlayerInput const* input,
 	FInputActionValue value,
 	float deltaTime)
-	-> FInputActionValue
 {
 	if (m_NeedsInit)
 		SetupCurves();
@@ -39,33 +36,33 @@ auto Self::ModifyRaw_Implementation(
 }
 
 #if WITH_EDITOR
-void Self::PostEditChangeProperty(FPropertyChangedEvent& event)
+void UInputModifier_RWA_VirtualJoystick::PostEditChangeProperty(FPropertyChangedEvent& event)
 {
 	Super::PostEditChangeProperty(event);
 	SetupCurves();
 }
 #endif
 
-void Self::PostLoad()
+void UInputModifier_RWA_VirtualJoystick::PostLoad()
 {
 	Super::PostLoad();
 	SetupCurves();
 }
 
 
-void Self::SetupCurves()
+void UInputModifier_RWA_VirtualJoystick::SetupCurves()
 {
 	auto setupCurve = [](
 		FCubicBezier& curve,
 		float scaleX, float slope, float easing, float balance)
 	{
-		auto p2_wgt1 = FVector2f{ (1.f - slope) * scaleX, 1 };
-		auto p3 = FVector2f{ p2_wgt1.X + (easing * scaleX), 1 };
+		FVector2f p2_wgt1 { (1.f - slope) * scaleX, 1 };
+		FVector2f p3 { p2_wgt1.X + (easing * scaleX), 1 };
 
-		auto p2_wgt0 = FMath::Lerp({ 0, 0 }, p2_wgt1, 0.5f);
+		FVector2f p2_wgt0 = FMath::Lerp({ 0, 0 }, p2_wgt1, 0.5f);
 		p2_wgt0 = FMath::Lerp(p2_wgt0, { 0, 1 }, easing * 0.5f);
 
-		auto p2 = FMath::Lerp(p2_wgt0, p2_wgt1, balance);
+		FVector2f p2 = FMath::Lerp(p2_wgt0, p2_wgt1, balance);
 
 		curve.P0 = { 0, 0 };
 		curve.P1 = { 0, 0 };
@@ -80,7 +77,7 @@ void Self::SetupCurves()
 	m_NeedsInit = false;
 }
 
-auto Self::ModifyRaw(float value, float deltaTime) -> FInputActionValue
+FInputActionValue UInputModifier_RWA_VirtualJoystick::ModifyRaw(float value, float deltaTime) 
 {
 	float prev = m_PrevInput.Get<float>();
 	float delta = value - prev;
@@ -100,7 +97,7 @@ auto Self::ModifyRaw(float value, float deltaTime) -> FInputActionValue
 	}
 
 	if (m_Phase == None)
-		return value;
+		return FInputActionValue(value);
 
 	float x = FMath::Min(
 		m_ActiveCurve->Duration(),
@@ -114,34 +111,37 @@ auto Self::ModifyRaw(float value, float deltaTime) -> FInputActionValue
 	if (FMath::IsNearlyEqual(result, value)) {
 		m_Phase = None;
 
-		return result;
+		return FInputActionValue(result);
 	}
 
 	if (m_Phase == Falling)
-		return 1 - result;
+		return FInputActionValue(1.f - result);
 
-	return result;
+	return FInputActionValue(result);
 }
 
-auto Self::ModifyRaw(FVector2D value, float deltaTime) const -> FInputActionValue
+FInputActionValue UInputModifier_RWA_VirtualJoystick::ModifyRaw(
+	FVector2D value,
+	float deltaTime)
+	const 
 {
 	if (value.IsNearlyZero())
-		return { value };
+		return FInputActionValue(value);
 
-	auto prev = m_PrevInput.Get<FVector2D>();
-	auto result = FMath::Vector2DInterpTo(prev, value, deltaTime, SpringTension);
-	return { result };
+	FVector2D prev = m_PrevInput.Get<FVector2D>();
+	FVector2D result = FMath::Vector2DInterpTo(prev, value, deltaTime, SpringTension);
+	return FInputActionValue(result);
 }
 
-auto Self::ModifyRaw(FVector value, float deltaTime) const -> FInputActionValue
+FInputActionValue UInputModifier_RWA_VirtualJoystick::ModifyRaw(
+	FVector value,
+	float deltaTime)
+	const 
 {
 	if (value.IsNearlyZero())
-		return { value };
+		return FInputActionValue(value);
 
-	auto prev = m_PrevInput.Get<FVector>();
-	auto result = FMath::VInterpTo(prev, value, deltaTime, SpringTension);
-	return { result };
+	FVector prev = m_PrevInput.Get<FVector>();
+	FVector result = FMath::VInterpTo(prev, value, deltaTime, SpringTension);
+	return FInputActionValue(result);
 }
-
-
-#undef Self

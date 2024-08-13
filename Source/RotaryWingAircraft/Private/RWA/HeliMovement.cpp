@@ -7,10 +7,8 @@ DEFINE_LOG_CATEGORY(LogHeliMvmt)
 #define HELI_LOG(msg, ...) UE_LOG(LogHeliMvmt, Log, TEXT(msg), __VA_ARGS__)
 #define HELI_WARN(msg, ...) UE_LOG(LogHeliMvmt, Warning, TEXT(msg), __VA_ARGS__)
 
-#define Self URWA_HeliMovementComponent
 
-
-Self::URWA_HeliMovementComponent() : Super()
+URWA_HeliMovementComponent::URWA_HeliMovementComponent() : Super()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = true;
@@ -21,18 +19,18 @@ Self::URWA_HeliMovementComponent() : Super()
 
 // Lifecycle & Events ----------------------------------------------------------
 
-void Self::TickComponent(float deltaTime, ELevelTick type, TickFn* fn)
+void URWA_HeliMovementComponent::TickComponent(float deltaTime, ELevelTick type, TickFn* fn)
 {
 	Super::TickComponent(deltaTime, type, fn);
 
-	if (auto* body = GetBodyInstance())
+	if (FBodyInstance* body = GetBodyInstance())
 		body->AddCustomPhysics(OnCalculateCustomPhysics);
 	else {
 		HELI_WARN("Failed to get body instance!");
 	}
 }
 
-void Self::SetUpdatedComponent(USceneComponent* cmp)
+void URWA_HeliMovementComponent::SetUpdatedComponent(USceneComponent* cmp)
 {
 	Super::SetUpdatedComponent(cmp);
 
@@ -45,18 +43,18 @@ void Self::SetUpdatedComponent(USceneComponent* cmp)
 	}
 }
 
-void Self::SubstepTick(float deltaTime, FBodyInstance* body)
+void URWA_HeliMovementComponent::SubstepTick(float deltaTime, FBodyInstance* body)
 {
 	UpdateEngineState(deltaTime);
 	UpdatePhysicsState(deltaTime, body);
 	UpdateSimulation(deltaTime, body);
 }
 
-void Self::UpdateEngineState(float deltaTime)
+void URWA_HeliMovementComponent::UpdateEngineState(float deltaTime)
 {
 	using namespace RWA;
 
-	auto& state = m_EngineState;
+	FEngineState& state = m_EngineState;
 
 	switch (state.Phase) {
 		case EEngineState::SpoolingUp: {
@@ -78,7 +76,7 @@ void Self::UpdateEngineState(float deltaTime)
 		case EEngineState::SpoolingDown: {
 			state.SpoolAlpha -= (1 / SpoolUpTime) * deltaTime;
 
-			auto sinAlpha = Util::CurveSin(state.SpoolAlpha);
+			float sinAlpha = Util::CurveSin(state.SpoolAlpha);
 			state.PowerAlpha = Util::InverseLerp(sinAlpha, 0.667, 1.0);
 
 			if (state.SpoolAlpha <= 0) {
@@ -95,18 +93,19 @@ void Self::UpdateEngineState(float deltaTime)
 	}
 }
 
-void Self::UpdatePhysicsState(float deltaTime, FBodyInstance* body)
+void URWA_HeliMovementComponent::UpdatePhysicsState(float deltaTime, FBodyInstance* body)
 {
-	auto transform = GetOwner()->GetActorTransform();
+	FTransform transform = GetOwner()->GetActorTransform();
 
-	FPhysicsCommand::ExecuteRead(body->ActorHandle, [&](FPhysicsActorHandle const& handle) {
-		auto mass = FPhysicsInterface::GetMass_AssumesLocked(handle);
-		auto com = FPhysicsInterface::GetComTransform_AssumesLocked(handle).GetLocation();
-		auto lv = body->GetUnrealWorldVelocity_AssumesLocked();
-		auto av = body->GetUnrealWorldAngularVelocityInRadians_AssumesLocked();
-		auto dv = lv - m_PhysicsState.LinearVelocity;
-		auto aoa = FMath::Asin((Up() | lv) / lv.Size());
-		auto gForce = transform.InverseTransformVector(dv / (k_Gravity * deltaTime));
+	FPhysicsCommand::ExecuteRead(body->ActorHandle, [&](FPhysicsActorHandle const& handle)
+	{
+		float mass = FPhysicsInterface::GetMass_AssumesLocked(handle);
+		FVector com = FPhysicsInterface::GetComTransform_AssumesLocked(handle).GetLocation();
+		FVector lv = body->GetUnrealWorldVelocity_AssumesLocked();
+		FVector av = body->GetUnrealWorldAngularVelocityInRadians_AssumesLocked();
+		FVector dv = lv - m_PhysicsState.LinearVelocity;
+		float aoa = FMath::Asin((Up() | lv) / lv.Size());
+		FVector gForce = transform.InverseTransformVector(dv / (k_Gravity * deltaTime));
 
 		m_PhysicsState.Mass = mass;
 		m_PhysicsState.CoM = com;
@@ -116,7 +115,8 @@ void Self::UpdatePhysicsState(float deltaTime, FBodyInstance* body)
 		m_PhysicsState.GForce = gForce;
 		m_PhysicsState.AngleOfAttack = aoa;
 
-		if (lv.Size() < 100) {
+		if (lv.Size() < 100)
+		{
 			m_PhysicsState.CrossSectionalArea = 0;
 			return;
 		}
@@ -126,18 +126,18 @@ void Self::UpdatePhysicsState(float deltaTime, FBodyInstance* body)
 	});
 }
 
-void Self::UpdateSimulation(float deltaTime, FBodyInstance* body) const
+void URWA_HeliMovementComponent::UpdateSimulation(float deltaTime, FBodyInstance* body) const
 {
-	auto mass = m_PhysicsState.Mass;
-	auto com = m_PhysicsState.CoM;
-	auto lv = m_PhysicsState.LinearVelocity;
-	auto av = m_PhysicsState.AngularVelocity;
-	auto surfArea = m_PhysicsState.CrossSectionalArea;
-	auto aoa = m_PhysicsState.AngleOfAttack;
+	float mass = m_PhysicsState.Mass;
+	FVector com = m_PhysicsState.CoM;
+	FVector lv = m_PhysicsState.LinearVelocity;
+	FVector av = m_PhysicsState.AngularVelocity;
+	float surfArea = m_PhysicsState.CrossSectionalArea;
+	float aoa = m_PhysicsState.AngleOfAttack;
 
-	auto dv = ComputeThrust(com, mass);
-	auto drag = ComputeDrag(lv, aoa, surfArea);
-	auto torque = lv.IsNearlyZero(10.f)
+	FVector dv = ComputeThrust(com, mass);
+	FVector drag = ComputeDrag(lv, aoa, surfArea);
+	FVector torque = lv.IsNearlyZero(10.f)
 		? FVector::ZeroVector
 		: ComputeTorque(av, mass);
 
@@ -154,135 +154,145 @@ void Self::UpdateSimulation(float deltaTime, FBodyInstance* body) const
 
 // Physics Calculations --------------------------------------------------------
 
-auto Self::ComputeCrossSectionalArea(
+float URWA_HeliMovementComponent::ComputeCrossSectionalArea(
 	FBodyInstance const* body,
 	FPhysicsActorHandle const& handle,
-	FVector velocityNormal)
-	const -> float
+	FVector const& velocityDirection)
+	const
 {
-	auto bb = FPhysicsInterface::GetBounds_AssumesLocked(handle);
-	auto extent = bb.GetExtent().GetAbsMax();
+	FBox bb = FPhysicsInterface::GetBounds_AssumesLocked(handle);
+	float extent = bb.GetExtent().GetAbsMax();
 
 	// dp = direction plane: a plane perpendicular to the direction of travel.
 	// We'll fire a bunnch of line traces from various points on this plane
 	// toward the vehicle, and use the proportion of hits to roughly estimate
 	// the cross-sectional area of the vehicle for drag calculations.
-	auto dpCenter = bb.GetCenter() + velocityNormal * extent;
-	auto dpNormal = velocityNormal * -1;
-	auto dpTan = FVector {};
-	auto dpBinorm = FVector {};
+	FVector dpCenter = bb.GetCenter() + velocityDirection * extent;
+	FVector dpNormal = velocityDirection * -1;
+	FVector dpTan, dpBinorm;
 	dpNormal.FindBestAxisVectors(dpTan, dpBinorm);
 
-	auto step = extent / 16.0;
-	auto hit = FHitResult {};
-	auto hits = 0;
-	auto total = 0;
+	float step = extent / 16.0;
+	FHitResult hit;
+	int32 hits = 0, total = 0;
 
-	for (auto x = -extent; x < extent; x += step) {
-		for (auto y = -extent; y < extent; y += step) {
+	for (float x = -extent; x < extent; x += step)
+	{
+		for (float y = -extent; y < extent; y += step)
+		{
 			++total;
 
-			auto p1 = dpCenter + (dpTan * x) + (dpBinorm * y);
-			auto p2 = p1 + (dpNormal * extent * 4.0);
+			FVector p1 = dpCenter + (dpTan * x) + (dpBinorm * y);
+			FVector p2 = p1 + (dpNormal * extent * 4.0);
 
 			if (body->LineTrace(hit, p1, p2, false))
 				++hits;
 		}
 	}
 
-	return ((double) hits / (double) total) * extent * 4.0;
+	return ((float) hits / (float) total) * extent * 4.0;
 }
 
 
-auto Self::ComputeThrust(FVector const& pos, float mass) const -> FVector
+FVector URWA_HeliMovementComponent::ComputeThrust(FVector const& pos, float mass) const
 {
 	using namespace RWA;
 
 	// Scale the collective input by the current engine power
-	auto scaledInput = m_Input.Collective * m_EngineState.PowerAlpha;
+	float scaledInput = m_Input.Collective * m_EngineState.PowerAlpha;
 
 	// Compute the base thrust magnitude
-	auto magicTuningValue = 3.4525;
-	auto thrust = scaledInput * EnginePower * magicTuningValue;
+	float thrust = scaledInput >= 0
+		? FMath::Lerp(0.0, -k_Gravity + EnginePower, scaledInput)
+		: FMath::Lerp(0.0, k_Gravity - EnginePower, FMath::Abs(scaledInput));
 
 	// Ground effect - increases rotor efficiency when altitude < 80m
 	// TODO: Make the ground effect altitude curve configurable
-	auto agl = GetRadarAltitude();
-	auto geAlpha = Util::InverseLerp(agl, 80'00, 0);
-	auto groundEffect = FMath::Clamp(geAlpha * EnginePower * scaledInput, 0, EnginePower);
+	float agl = GetRadarAltitude();
+	float geAlpha = Util::InverseLerp(agl, 80'00, 0);
+	float groundEffect = FMath::Clamp(geAlpha * EnginePower * scaledInput, 0, EnginePower);
 
 	// Altitude penalty - decreases rotor efficiency at high altitudes
-	auto altPenalty = 1.0;
+	float altPenalty = 1.0;
 	if (AltitudePenaltyCurve)
 		altPenalty = AltitudePenaltyCurve->GetFloatValue(pos.Z / 100.0);
 
 	return mass * ((thrust * altPenalty) + groundEffect) * Up();
 }
 
-auto Self::ComputeDrag(FVector const& velocity, float aoa, float area) const -> FVector
+FVector URWA_HeliMovementComponent::ComputeDrag(
+	FVector const& velocity,
+	float aoa,
+	float area)
+	const 
 {
 	using namespace RWA;
 
-	auto aoaAbs = FMath::Abs(aoa);
-	auto cd = 0.0;
-	if (DragCoefficientCurve) {
+	float aoaAbs = FMath::Abs(aoa);
+	float cd = 0.0;
+	if (DragCoefficientCurve)
+	{
 		cd = DragCoefficientCurve->GetFloatValue(FMath::RadiansToDegrees(aoaAbs));
-	} else {
-		auto aoaAlpha = Util::InverseLerp(aoaAbs, 0, PI / 2);
+	}
+	else
+	{
+		float aoaAlpha = Util::InverseLerp(aoaAbs, 0, PI / 2);
 		cd = FMath::Lerp(0.667, 1.5, aoaAlpha);
 	}
 
-	auto rho = 0.01225; // TODO: Modulate air density by altitude
-	auto v = velocity.Size() / 15.0;
-	auto drag = 0.5 * cd * rho * v * v * area;
+	float rho = 0.01225; // TODO: Modulate air density by altitude
+	float v = velocity.Size() / 15.0;
+	float drag = 0.5 * cd * rho * v * v * area;
 
 	// Convert a portion of drag to lift when pitching up (i.e. "cyclic climb")
-	auto stallAngle = FMath::DegreesToRadians(30);
-	auto lift = 0.f;
-	if (aoa < 0 && aoaAbs < stallAngle) {
-		auto ideal = stallAngle * 0.5f;
-		auto factor = 1.f - (FMath::Abs(aoaAbs - ideal) / ideal);
+	float stallAngle = FMath::DegreesToRadians(30);
+	float lift = 0.f;
+	
+	if (aoa < 0 && aoaAbs < stallAngle)
+	{
+		float ideal = stallAngle * 0.5f;
+		float factor = 1.f - (FMath::Abs(aoaAbs - ideal) / ideal);
 		lift = factor * drag;
 		drag -= lift;
 	}
 
-	auto dragVector = velocity.GetSafeNormal() * -drag;
-	auto liftVector = Up() * lift;
+	FVector dragVector = velocity.GetSafeNormal() * -drag;
+	FVector liftVector = Up() * lift;
 
 	return dragVector + liftVector;
 }
 
-auto Self::ComputeTorque(FVector const& angularVelocity, float mass) const -> FVector
+FVector URWA_HeliMovementComponent::ComputeTorque(FVector const& angularVelocity, float mass) const
 {
-	auto pitch = Right() * m_Input.Pitch * CyclicSensitivity;
-	auto roll = Forward() * -m_Input.Roll * CyclicSensitivity;
-	auto yaw = Up() * m_Input.Yaw * AntiTorqueSensitivity;
+	FVector pitch = Right() * m_Input.Pitch * CyclicSensitivity;
+	FVector roll = Forward() * -m_Input.Roll * CyclicSensitivity;
+	FVector yaw = Up() * m_Input.Yaw * AntiTorqueSensitivity;
 
-	auto target = pitch + roll + yaw;
-	auto inputTorque = target - angularVelocity;
+	FVector target = pitch + roll + yaw;
+	FVector inputTorque = target - angularVelocity;
 
 	return inputTorque * mass * 1'000'00 * Agility;
 }
 
-void Self::ComputeAeroTorque(
+void URWA_HeliMovementComponent::ComputeAeroTorque(
 	FVector const& velocity,
 	float mass,
 	FVector& inout_torque)
 	const
 {
-	auto* pawn = GetPawn();
+	APawn* pawn = GetPawn();
 	if (!ensure(pawn)) return;
 
-	auto vRel = pawn
+	FVector vRel = pawn
 		->GetTransform()
 		.InverseTransformVector(velocity)
 		.RotateAngleAxis(15, FVector::RightVector);
 
-	auto thetaZ = FMath::Atan2(vRel.Y, vRel.X);
-	auto thetaX = FMath::Atan2(vRel.Z, vRel.Y);
+	float thetaZ = FMath::Atan2(vRel.Y, vRel.X);
+	float thetaX = FMath::Atan2(vRel.Z, vRel.Y);
 
-	auto latVel = FVector { vRel.X, vRel.Y, 0 };
-	auto influence = AeroTorqueInfluence->GetFloatValue(latVel.Size() / 100);
+	FVector latVel { vRel.X, vRel.Y, 0 };
+	float influence = AeroTorqueInfluence->GetFloatValue(latVel.Size() / 100.0);
 
 	inout_torque += (Up() * thetaZ * mass * 120 * 1000 * influence);
 	inout_torque += (Right() * -thetaX * mass * 120 * 50 * influence);
@@ -291,13 +301,13 @@ void Self::ComputeAeroTorque(
 
 // Utility ---------------------------------------------------------------------
 
-auto Self::GetPawn() const -> APawn*
+APawn* URWA_HeliMovementComponent::GetPawn() const 
 {
 	if (!UpdatedComponent) return nullptr;
 	return Cast<APawn>(UpdatedComponent->GetOwner());
 }
 
-auto Self::GetBodyInstance() const -> FBodyInstance*
+FBodyInstance* URWA_HeliMovementComponent::GetBodyInstance() const 
 {
 	if (!UpdatedComponent) return nullptr;
 
@@ -307,27 +317,27 @@ auto Self::GetBodyInstance() const -> FBodyInstance*
 	return cmp->GetBodyInstance();
 }
 
-auto Self::Forward() const -> FVector
+FVector URWA_HeliMovementComponent::Forward() const 
 {
-	auto* pawn = GetPawn();
+	APawn* pawn = GetPawn();
 	if (ensure(pawn != nullptr))
 		return pawn->GetActorForwardVector();
 
 	return FVector::ForwardVector;
 }
 
-auto Self::Right() const -> FVector
+FVector URWA_HeliMovementComponent::Right() const 
 {
-	auto* pawn = GetPawn();
+	APawn* pawn = GetPawn();
 	if (ensure(pawn != nullptr))
 		return pawn->GetActorRightVector();
 
 	return FVector::RightVector;
 }
 
-auto Self::Up() const -> FVector
+FVector URWA_HeliMovementComponent::Up() const 
 {
-	auto* pawn = GetPawn();
+	APawn* pawn = GetPawn();
 	if (ensure(pawn != nullptr))
 		return pawn->GetActorUpVector();
 
@@ -337,12 +347,12 @@ auto Self::Up() const -> FVector
 
 // Debug -----------------------------------------------------------------------
 
-void Self::DebugPhysicsSimulation(
+void URWA_HeliMovementComponent::DebugPhysicsSimulation(
 	FVector const& centerOfMass,
 	FVector const& linearVelocity,
 	FVector const& thrust,
 	FVector const& drag,
-	double crossSectionalArea)
+	float crossSectionalArea)
 	const
 {
 	// Draw a sphere around the center of mass
@@ -368,8 +378,7 @@ void Self::DebugPhysicsSimulation(
 	);
 
 	// Draw a circle to represent the cross-sectional area
-	auto circleY = FVector {};
-	auto circleZ = FVector {};
+	FVector circleY, circleZ;
 	linearVelocity.GetSafeNormal().FindBestAxisVectors(circleY, circleZ);
 	DrawDebugCircle(
 		GetWorld(),
@@ -399,69 +408,68 @@ void Self::DebugPhysicsSimulation(
 
 // Blueprint Getters -----------------------------------------------------------
 
-auto Self::GetCurrentRPM() const -> float
+float URWA_HeliMovementComponent::GetCurrentRPM() const
 {
 	return m_EngineState.RPM;
 }
 
-auto Self::GetCurrentCollective() const -> float
+float URWA_HeliMovementComponent::GetCurrentCollective() const
 {
 	return m_Input.Collective;
 }
 
-auto Self::GetCurrentCyclic() const -> FVector2D
+FVector2D URWA_HeliMovementComponent::GetCurrentCyclic() const 
 {
 	return { m_Input.Roll, m_Input.Pitch };
 }
 
-auto Self::GetCurrentTorque() const -> float
+float URWA_HeliMovementComponent::GetCurrentTorque() const
 {
 	return m_Input.Yaw;
 }
 
-auto Self::GetVelocity() const -> FVector
+FVector URWA_HeliMovementComponent::GetVelocity() const 
 {
 	return m_PhysicsState.LinearVelocity;
 }
 
-auto Self::GetLateralAirspeed() const -> float
+float URWA_HeliMovementComponent::GetLateralAirspeed() const
 {
-	auto lv = m_PhysicsState.LinearVelocity;
-	auto latVel = FVector { lv.X, lv.Y, 0 };
+	FVector lv = m_PhysicsState.LinearVelocity;
+	FVector latVel { lv.X, lv.Y, 0 };
 
 	return latVel.Size();
 }
 
-auto Self::GetLateralAirspeedKnots() const -> float
+float URWA_HeliMovementComponent::GetLateralAirspeedKnots() const
 {
 	return GetLateralAirspeed() * k_CmPerSecToKnots;
 }
 
-auto Self::GetVerticalAirspeed() const -> float
+float URWA_HeliMovementComponent::GetVerticalAirspeed() const
 {
 	return m_PhysicsState.LinearVelocity.Z;
 }
 
-auto Self::GetHeadingDegrees() const -> float
+float URWA_HeliMovementComponent::GetHeadingDegrees() const
 {
-	auto direction = FVector
-		::VectorPlaneProject(Forward(), FVector::UpVector)
-		.GetSafeNormal();
+	FVector direction = FVector::VectorPlaneProject(Forward(), FVector::UpVector);
+	direction.Normalize();
 
 	return FMath::RadiansToDegrees(FMath::Atan2(-direction.Y, -direction.X)) + 180.0;
 }
 
-auto Self::GetRadarAltitude() const -> float
+float URWA_HeliMovementComponent::GetRadarAltitude() const
 {
-	auto* pawn = GetPawn();
+	APawn* pawn = GetPawn();
 	if (pawn == nullptr) return INFINITY;
 
 	auto params = FCollisionQueryParams::DefaultQueryParam;
 	params.AddIgnoredActor(pawn);
 
-	auto start = m_PhysicsState.CoM;
-	auto end = start + FVector::DownVector * 2000'00.f;
-	auto hit = FHitResult {};
+	FVector start = m_PhysicsState.CoM;
+	FVector end = start + FVector::DownVector * 2000'00.f;
+	FHitResult hit;
 
 	if (GetWorld()->LineTraceSingleByChannel(hit, start, end, ECC_WorldStatic, params))
 		return FVector::Dist(start, hit.Location);
@@ -472,19 +480,19 @@ auto Self::GetRadarAltitude() const -> float
 
 // Blueprint Methods -----------------------------------------------------------
 
-void Self::StartEngine()
+void URWA_HeliMovementComponent::StartEngine()
 {
 	if (m_EngineState.Phase != EEngineState::Running)
 		m_EngineState.Phase = EEngineState::SpoolingUp;
 }
 
-void Self::StopEngine()
+void URWA_HeliMovementComponent::StopEngine()
 {
 	if (m_EngineState.Phase != EEngineState::Off)
 		m_EngineState.Phase = EEngineState::SpoolingDown;
 }
 
-void Self::SetCollectiveInput(float value)
+void URWA_HeliMovementComponent::SetCollectiveInput(float value)
 {
 	if (value > 0 && m_EngineState.Phase == EEngineState::Off)
 		StartEngine();
@@ -492,22 +500,21 @@ void Self::SetCollectiveInput(float value)
 	m_Input.Collective = value;
 }
 
-void Self::SetPitchInput(float value)
+void URWA_HeliMovementComponent::SetPitchInput(float value)
 {
 	m_Input.Pitch = value;
 }
 
-void Self::SetRollInput(float value)
+void URWA_HeliMovementComponent::SetRollInput(float value)
 {
 	m_Input.Roll = value;
 }
 
-void Self::SetYawInput(float value)
+void URWA_HeliMovementComponent::SetYawInput(float value)
 {
 	m_Input.Yaw = value;
 }
 
 
-#undef Self
 #undef HELI_LOG
 #undef HELI_WARN

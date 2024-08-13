@@ -6,7 +6,7 @@
 namespace RWA::Editor::Util {
 
 template <typename T>
-auto LoadAsset(FName const& referenceName) -> T*
+T* LoadAsset(FName const& referenceName)
 {
 	return Cast<T>(StaticLoadObject(T::StaticClass(), nullptr, *referenceName.ToString()));
 }

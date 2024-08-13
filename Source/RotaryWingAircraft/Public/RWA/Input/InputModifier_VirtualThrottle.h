@@ -13,7 +13,8 @@
  * zero input (
  */
 UCLASS(NotBlueprintable, MinimalAPI, meta=(DisplayName="RWA Virtual Throttle"))
-class UInputModifier_RWA_VirtualThrottle : public UInputModifier {
+class UInputModifier_RWA_VirtualThrottle : public UInputModifier
+{
 	GENERATED_BODY()
 
 public:
@@ -40,11 +41,11 @@ public:
 	float Detent = 0.05f;
 
 protected:
-	auto ModifyRaw_Implementation(
+	FInputActionValue ModifyRaw_Implementation(
 		UEnhancedPlayerInput const* input,
 		FInputActionValue value,
 		float deltaTime)
-		-> FInputActionValue override;
+		override;
 
 private:
 	static TMap<FName,FInputActionValue> s_AxisValues;

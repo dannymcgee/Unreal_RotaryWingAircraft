@@ -3,12 +3,10 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "RWA/EditorUtil.h"
 
-#define Self SCubicBezierViewer
-
 
 namespace RWA::Editor::CubicBezierViewer {
 
-auto FRenderResources::DynamicMaterial() -> UMaterialInstanceDynamic*
+UMaterialInstanceDynamic* FRenderResources::DynamicMaterial()
 {
 	if (m_DynamicMaterial != nullptr)
 		return m_DynamicMaterial;
@@ -21,7 +19,7 @@ auto FRenderResources::DynamicMaterial() -> UMaterialInstanceDynamic*
 	return m_DynamicMaterial;
 }
 
-auto FRenderResources::GetReferencerName() const -> FString
+FString FRenderResources::GetReferencerName() const 
 {
 	return "RWA::Editor::CubicBezierViewer::FRenderResources";
 }
@@ -36,16 +34,16 @@ void FRenderResources::AddReferencedObjects(FReferenceCollector& gc)
 } // namespace RWA::Editor::CubicBezierViewer
 
 
-Self::SCubicBezierViewer()
+SCubicBezierViewer::SCubicBezierViewer()
 	: m_RenderResources(new RenderResources)
 {}
 
-Self::~SCubicBezierViewer()
+SCubicBezierViewer::~SCubicBezierViewer()
 {
 	BeginCleanup(m_RenderResources);
 }
 
-void Self::Construct(FArguments const& args)
+void SCubicBezierViewer::Construct(FArguments const& args)
 {
 	m_ColorAndOpacity = args._ColorAndOpacity;
 	m_CubicBezier = args._CubicBezier;
@@ -55,14 +53,14 @@ void Self::Construct(FArguments const& args)
 	else
 		m_PrevCubicBezier = {};
 
-	auto* curveMat = m_RenderResources->DynamicMaterial();
+	UMaterialInstanceDynamic* curveMat = m_RenderResources->DynamicMaterial();
 	m_ImageBrush.SetImageSize(FVector2D{ 256, 256 });
 	m_ImageBrush.SetResourceObject(curveMat);
 
 	// TODO:
 	// - Add synthetic "duration" field
 	// - Show individual point values
-	auto child = SNew(SBox)
+	TSharedRef<SBox> child = SNew(SBox)
 		.Padding(8)
 		.WidthOverride(128)
 		.MinDesiredWidth(0)
@@ -81,7 +79,7 @@ void Self::Construct(FArguments const& args)
 	UpdateView(m_PrevCubicBezier);
 }
 
-auto Self::OnPaint(
+int32 SCubicBezierViewer::OnPaint(
 	FPaintArgs const& args,
 	FGeometry const& geo,
 	FSlateRect const& rect,
@@ -89,22 +87,23 @@ auto Self::OnPaint(
 	int32 layer,
 	FWidgetStyle const& style,
 	bool parentEnabled)
-	const -> int32
+	const
 {
-	if (auto const& cubicBezier = m_CubicBezier.Get())
+	if (TOptional<FCubicBezier> const& cubicBezier = m_CubicBezier.Get())
 		if (!FCubicBezier::IsNearlyEqual(*cubicBezier, m_PrevCubicBezier))
 			UpdateView(*cubicBezier);
 
 	return Super::OnPaint(args, geo, rect, elements, layer, style, parentEnabled);
 }
 
-void Self::UpdateView(FCubicBezier const& curve) const
+void SCubicBezierViewer::UpdateView(FCubicBezier const& curve) const
 {
 	auto const& [p0, p1, p2, p3] = curve;
-	auto* curveMat = m_RenderResources->DynamicMaterial();
+	UMaterialInstanceDynamic* curveMat = m_RenderResources->DynamicMaterial();
 
-	if (m_ChildContainer.IsValid()) {
-		auto box = m_ChildContainer.Pin();
+	if (m_ChildContainer.IsValid())
+	{
+		TSharedPtr<SBox> box = m_ChildContainer.Pin();
 		box->SetWidthOverride(128 * curve.Duration());
 	}
 
@@ -112,5 +111,3 @@ void Self::UpdateView(FCubicBezier const& curve) const
 	curveMat->SetVectorParameterValue("P2-P3", FVector4f{ p2.X, p2.Y, p3.X, p3.Y });
 }
 
-
-#undef Self

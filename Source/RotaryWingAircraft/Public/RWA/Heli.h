@@ -14,13 +14,16 @@ class UInputMappingContext;
 
 
 UCLASS(Blueprintable)
-class ROTARYWINGAIRCRAFT_API ARWA_Heli : public APawn {
+class ROTARYWINGAIRCRAFT_API ARWA_Heli
+	: public APawn
+{
 	GENERATED_BODY()
 
+	using Self = ARWA_Heli;
 
 public:
 
-	ARWA_Heli();
+	ARWA_Heli(FObjectInitializer const& init);
 
 	void SetupPlayerInputComponent(UInputComponent* inputCmp) override;
 
@@ -30,7 +33,7 @@ public:
 	UFUNCTION(BlueprintGetter)
 	URWA_HeliMovementComponent* GetVehicleMovement() const;
 
-	auto GetMovementComponent() const -> UPawnMovementComponent* override;
+	UPawnMovementComponent* GetMovementComponent() const override;
 
 	/**
 	 * Adds the vehicle's input mapping context to the current player. If the
@@ -58,32 +61,32 @@ public:
 protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
-	UInputMappingContext* DefaultMappingContext;
+	TObjectPtr<UInputMappingContext> DefaultMappingContext;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
-	UInputAction* CyclicAction;
+	TObjectPtr<UInputAction> CyclicAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
-	UInputAction* CollectiveAction;
+	TObjectPtr<UInputAction> CollectiveAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input", DisplayName="Anti-Torque Action")
-	UInputAction* AntiTorqueAction;
+	TObjectPtr<UInputAction> AntiTorqueAction;
 
 	void BeginPlay() override;
 
-	virtual auto GetInputSubsystem() const -> IEnhancedInputSubsystemInterface*;
+	virtual IEnhancedInputSubsystemInterface* GetInputSubsystem() const;
 
 
 private:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintGetter="GetMesh", Category="Vehicle", DisplayName="Mesh")
-	USkeletalMeshComponent* m_Mesh;
+	TObjectPtr<USkeletalMeshComponent> m_Mesh;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintGetter="GetVehicleMovement", Category="Vehicle", DisplayName="Vehicle Movement")
-	URWA_HeliMovementComponent* m_VehicleMovement;
+	TObjectPtr<URWA_HeliMovementComponent> m_VehicleMovement;
 
-	auto InitSkelMesh() -> USkeletalMeshComponent*;
-	auto InitVehicleMovement(USkeletalMeshComponent* mesh) -> URWA_HeliMovementComponent*;
+	USkeletalMeshComponent* InitSkelMesh();
+	URWA_HeliMovementComponent* InitVehicleMovement(USkeletalMeshComponent* mesh);
 
 	void OnCyclic(FInputActionValue const& value);
 	void OnCollective(FInputActionValue const& value);

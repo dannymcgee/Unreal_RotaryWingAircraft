@@ -1,15 +1,12 @@
 ﻿#include "RWA/Input/InputModifier_VirtualThrottle.h"
 
-#define Self UInputModifier_RWA_VirtualThrottle
 
+TMap<FName,FInputActionValue> UInputModifier_RWA_VirtualThrottle::s_AxisValues {};
 
-TMap<FName,FInputActionValue> Self::s_AxisValues {};
-
-auto Self::ModifyRaw_Implementation(
+FInputActionValue UInputModifier_RWA_VirtualThrottle::ModifyRaw_Implementation(
 	UEnhancedPlayerInput const* input,
 	FInputActionValue value,
 	float deltaTime)
-	-> FInputActionValue
 {
 	if (!ensureMsgf(AxisID != EName::None,
 		TEXT("RWA Virtual Throttle modifier requires an Axis ID to function properly!")))
@@ -17,10 +14,11 @@ auto Self::ModifyRaw_Implementation(
 		return 0;
 	}
 
-	auto& current = s_AxisValues.FindOrAdd(AxisID, {});
+	FInputActionValue& current = s_AxisValues.FindOrAdd(AxisID, {});
 
-	if (value.IsNonZero()) {
-		auto next = current + (value * Sensitivity * deltaTime);
+	if (value.IsNonZero())
+	{
+		FInputActionValue next = current + (value * Sensitivity * deltaTime);
 
 		// Clamp to a max-length of 1
 		float mag2 = next.GetMagnitudeSq();
@@ -35,8 +33,9 @@ auto Self::ModifyRaw_Implementation(
 		&& Detent > 0.f
 		&& current.GetValueType() == EInputActionValueType::Axis1D)
 	{
-		auto currentValue = current.Get<float>();
-		if (FMath::Abs(currentValue) <= Detent) {
+		float currentValue = current.Get<float>();
+		if (FMath::Abs(currentValue) <= Detent)
+		{
 			current = currentValue + (-FMath::Sign(currentValue) * Sensitivity * deltaTime * 0.25f);
 
 			return current;
@@ -45,6 +44,3 @@ auto Self::ModifyRaw_Implementation(
 
 	return current;
 }
-
-
-#undef Self

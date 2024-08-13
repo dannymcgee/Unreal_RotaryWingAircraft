@@ -2,10 +2,8 @@
 
 #include "RWA/CubicBezierCustomization.h"
 
-#define Self FRotaryWingAircraftEditorModule
 
-
-void Self::StartupModule()
+void FRotaryWingAircraftEditorModule::StartupModule()
 {
 	using Callback = FOnGetPropertyTypeCustomizationInstance;
 
@@ -15,10 +13,8 @@ void Self::StartupModule()
 		"CubicBezier", Callback::CreateStatic(&FCubicBezierStructCustomization::MakeInstance));
 }
 
-void Self::ShutdownModule()
+void FRotaryWingAircraftEditorModule::ShutdownModule()
 {}
 
-
-#undef Self
 
 IMPLEMENT_MODULE(FRotaryWingAircraftEditorModule, RotaryWingAircraftEditor)
