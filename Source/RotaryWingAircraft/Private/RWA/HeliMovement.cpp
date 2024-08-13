@@ -202,8 +202,9 @@ auto Self::ComputeThrust(FVector const& pos, float mass) const -> FVector
 	auto scaledInput = m_Input.Collective * m_EngineState.PowerAlpha;
 
 	// Compute the base thrust magnitude
-	auto magicTuningValue = 3.4525;
-	auto thrust = scaledInput * EnginePower * magicTuningValue;
+	auto thrust = scaledInput >= 0
+		? FMath::Lerp(0.0, -k_Gravity + EnginePower, scaledInput)
+		: FMath::Lerp(0.0, k_Gravity - EnginePower, FMath::Abs(scaledInput));
 
 	// Ground effect - increases rotor efficiency when altitude < 80m
 	// TODO: Make the ground effect altitude curve configurable
