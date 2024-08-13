@@ -52,8 +52,8 @@ class FRWA_RenderResources
 {
 public:
 	FWidgetRenderer* WidgetRenderer = nullptr;
-	UTextureRenderTarget2D* RenderTarget = nullptr;
-	UMaterialInstanceDynamic* DynamicEffect = nullptr;
+	TObjectPtr<UTextureRenderTarget2D> RenderTarget = nullptr;
+	TObjectPtr<UMaterialInstanceDynamic> DynamicEffect = nullptr;
 
 public:
 	FRWA_RenderResources() = default;
@@ -152,7 +152,7 @@ void Self::UpdateWidgetRenderer()
 	wr->SetClearHitTestGrid(false);
 
 	// Update the render target to match the current gamma rendering prefs
-	auto* rt = m_RenderResources->RenderTarget;
+	auto rt = m_RenderResources->RenderTarget;
 	if (rt && rt->SRGB != writeContentInGammaSpace) {
 		// NOTE: We do the opposite here of whatever write is. If we're writing
 		// out gamma, then sRGB writes were not supported, so it won't be an sRGB
@@ -466,7 +466,7 @@ auto Self::PaintRetainedContentImpl(
 		return EPaintRetainedContentResult::TextureSizeZero;
 	}
 
-	auto* rt = m_RenderResources->RenderTarget;
+	auto rt = m_RenderResources->RenderTarget;
 	auto* wr = m_RenderResources->WidgetRenderer;
 
 	// Handle size mismatch
@@ -588,7 +588,7 @@ auto Self::OnPaint(
 	if (paintResult == EPaintRetainedContentResult::TextureSizeZero)
 		return GetCachedMaxLayerId();
 
-	auto* rt = m_RenderResources->RenderTarget;
+	auto rt = m_RenderResources->RenderTarget;
 	check(rt);
 
 	if (rt->GetSurfaceWidth() >= 1.f && rt->GetSurfaceHeight() >= 1.f) {
@@ -599,7 +599,7 @@ auto Self::OnPaint(
 
 		auto premulColorAndOpacity = computedColorAndOpacity * computedColorAndOpacity.A;
 		
-		if (auto* effect = m_RenderResources->DynamicEffect)
+		if (auto effect = m_RenderResources->DynamicEffect)
 			effect->SetTextureParameterValue(m_DynamicEffectTextureParam, rt);
 
 		FSlateDrawElement::MakeBox(

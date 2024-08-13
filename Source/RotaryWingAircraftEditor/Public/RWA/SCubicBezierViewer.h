@@ -18,8 +18,8 @@ public:
 	void AddReferencedObjects(FReferenceCollector& gc) override;
 
 private:
-	UMaterialInterface* m_Material = nullptr;
-	UMaterialInstanceDynamic* m_DynamicMaterial = nullptr;
+	TObjectPtr<UMaterialInterface> m_Material = nullptr;
+	TObjectPtr<UMaterialInstanceDynamic> m_DynamicMaterial = nullptr;
 };
 
 } // namespace RWA::Editor::CubicBezierViewer
