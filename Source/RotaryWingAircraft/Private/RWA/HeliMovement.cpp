@@ -4,8 +4,8 @@
 
 DEFINE_LOG_CATEGORY(LogHeliMvmt)
 
-#define HELI_LOG(msg, ...) UE_LOG(LogHeliMvmt, Log, TEXT(msg), __VA_ARGS__)
-#define HELI_WARN(msg, ...) UE_LOG(LogHeliMvmt, Warning, TEXT(msg), __VA_ARGS__)
+#define HELI_LOG(msg, ...) UE_LOG(LogHeliMvmt, Log, TEXT(msg) __VA_OPT__(,) __VA_ARGS__)
+#define HELI_WARN(msg, ...) UE_LOG(LogHeliMvmt, Warning, TEXT(msg) __VA_OPT__(,) __VA_ARGS__)
 
 
 URWA_HeliMovementComponent::URWA_HeliMovementComponent() : Super()
