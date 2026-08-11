@@ -439,9 +439,9 @@ auto SRWA_RetainerWidget::PaintRetainedContentImpl(
 	// so that we can leverage it in later calls.
 	UWorld* world = m_OuterWorld.Get();
 	if (world && world->Scene && IsInGameThread())
-		FSlateApplication::Get().GetRenderer()->RegisterCurrentScene(world->Scene);
+		(void)FSlateApplication::Get().GetRenderer()->RegisterCurrentScene(world->Scene);
 	else if (IsInGameThread())
-		FSlateApplication::Get().GetRenderer()->RegisterCurrentScene(nullptr);
+		(void)FSlateApplication::Get().GetRenderer()->RegisterCurrentScene(nullptr);
 
 	// Update the number of retainers we've drawn this frame
 	s_RetainerWorkThisFrame = s_RetainerWorkThisFrame.TryGetValue(0) + 1;

@@ -223,7 +223,7 @@ private:
 	FPhysicsState m_PhysicsState;
 
 	inline static float const k_Gravity = -981;
-	inline static float const k_CmPerSecToKnots = 0.019438;
+	inline static float const k_CmPerSecToKnots = 0.019438f;
 
 	APawn* GetPawn() const;
 	FBodyInstance* GetBodyInstance() const;

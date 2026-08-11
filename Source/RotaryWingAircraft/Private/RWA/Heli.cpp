@@ -6,8 +6,8 @@
 
 DEFINE_LOG_CATEGORY(LogHeli)
 
-#define HELI_LOG(msg, ...) UE_LOG(LogHeli, Log, TEXT(msg), __VA_ARGS__)
-#define HELI_WARN(msg, ...) UE_LOG(LogHeli, Warning, TEXT(msg), __VA_ARGS__)
+#define HELI_LOG(msg, ...) UE_LOG(LogHeli, Log, TEXT(msg) __VA_OPT__(,) __VA_ARGS__)
+#define HELI_WARN(msg, ...) UE_LOG(LogHeli, Warning, TEXT(msg) __VA_OPT__(,) __VA_ARGS__)
 
 
 // Initialization --------------------------------------------------------------

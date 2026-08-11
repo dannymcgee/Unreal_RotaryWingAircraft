@@ -4,8 +4,8 @@
 
 DEFINE_LOG_CATEGORY(LogHeliMvmt)
 
-#define HELI_LOG(msg, ...) UE_LOG(LogHeliMvmt, Log, TEXT(msg), __VA_ARGS__)
-#define HELI_WARN(msg, ...) UE_LOG(LogHeliMvmt, Warning, TEXT(msg), __VA_ARGS__)
+#define HELI_LOG(msg, ...) UE_LOG(LogHeliMvmt, Log, TEXT(msg) __VA_OPT__(,) __VA_ARGS__)
+#define HELI_WARN(msg, ...) UE_LOG(LogHeliMvmt, Warning, TEXT(msg) __VA_OPT__(,) __VA_ARGS__)
 
 
 URWA_HeliMovementComponent::URWA_HeliMovementComponent() : Super()
@@ -240,7 +240,7 @@ FVector URWA_HeliMovementComponent::ComputeDrag(
 		cd = FMath::Lerp(0.667, 1.5, aoaAlpha);
 	}
 
-	float rho = 0.01225; // TODO: Modulate air density by altitude
+	float rho = 0.01225f; // TODO: Modulate air density by altitude
 	float v = velocity.Size() / 15.0;
 	float drag = 0.5 * cd * rho * v * v * area;
 
