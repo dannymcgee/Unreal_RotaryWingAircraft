@@ -1,7 +1,8 @@
-﻿#include "RWA/HUD/SRetainerWidget.h"
+#include "RWA/HUD/SRetainerWidget.h"
 
 #include "Engine/TextureRenderTarget2D.h"
 #include "Input/HittestGrid.h"
+#include "Rendering/SlateRenderer.h"
 #include "Slate/WidgetRenderer.h"
 
 
@@ -437,11 +438,12 @@ auto SRWA_RetainerWidget::PaintRetainedContentImpl(
 	// RetainerWidget are the only locations where this information exists in
 	// Slate, so we push the current scene onto the current Slate application
 	// so that we can leverage it in later calls.
+	UE::Slate::FSceneRegistrationScope SceneScope;
 	UWorld* world = m_OuterWorld.Get();
 	if (world && world->Scene && IsInGameThread())
-		FSlateApplication::Get().GetRenderer()->RegisterCurrentScene(world->Scene);
-	else if (IsInGameThread())
-		FSlateApplication::Get().GetRenderer()->RegisterCurrentScene(nullptr);
+	{
+		SceneScope = FSlateApplication::Get().GetRenderer()->RegisterCurrentScene(world->Scene);
+	}
 
 	// Update the number of retainers we've drawn this frame
 	s_RetainerWorkThisFrame = s_RetainerWorkThisFrame.TryGetValue(0) + 1;
