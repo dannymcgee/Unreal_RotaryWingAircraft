@@ -1,11 +1,11 @@
-﻿#include "RWA/HeliMovement.h"
+#include "RWA/HeliMovement.h"
 
 #include "RWA/Util.h"
 
 DEFINE_LOG_CATEGORY(LogHeliMvmt)
 
-#define HELI_LOG(msg, ...) UE_LOG(LogHeliMvmt, Log, TEXT(msg), __VA_ARGS__)
-#define HELI_WARN(msg, ...) UE_LOG(LogHeliMvmt, Warning, TEXT(msg), __VA_ARGS__)
+#define HELI_LOG(msg, ...) UE_LOG(LogHeliMvmt, Log, TEXT(msg) __VA_OPT__(,) __VA_ARGS__)
+#define HELI_WARN(msg, ...) UE_LOG(LogHeliMvmt, Warning, TEXT(msg) __VA_OPT__(,) __VA_ARGS__)
 
 
 URWA_HeliMovementComponent::URWA_HeliMovementComponent() : Super()
@@ -237,15 +237,15 @@ FVector URWA_HeliMovementComponent::ComputeDrag(
 	else
 	{
 		float aoaAlpha = Util::InverseLerp(aoaAbs, 0, PI / 2);
-		cd = FMath::Lerp(0.667, 1.5, aoaAlpha);
+		cd = FMath::Lerp(0.667f, 1.5f, aoaAlpha);
 	}
 
-	float rho = 0.01225; // TODO: Modulate air density by altitude
-	float v = velocity.Size() / 15.0;
-	float drag = 0.5 * cd * rho * v * v * area;
+	float rho = 0.01225f; // TODO: Modulate air density by altitude
+	float v = velocity.Size() / 15.0f;
+	float drag = 0.5f * cd * rho * v * v * area;
 
 	// Convert a portion of drag to lift when pitching up (i.e. "cyclic climb")
-	float stallAngle = FMath::DegreesToRadians(30);
+	float stallAngle = FMath::DegreesToRadians(30.f);
 	float lift = 0.f;
 	
 	if (aoa < 0 && aoaAbs < stallAngle)
